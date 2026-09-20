@@ -2,49 +2,46 @@
   <q-nav title="Pidan Vocal"/>
   <view class="library-content">
     <view class="library-heading">
-      <text class="library-title">书架</text>
+      <text class="library-title">内容库</text>
       <navigator url="/pages/settings/settings" class="library-settings" hover-class="library-pressed">
         <text>我的与设置</text><q-icon name="arrow-right" color="muted" size="17"/>
       </navigator>
     </view>
     <view class="library-tabs" role="tablist">
-      <button size="default" class="library-tab {{audience==='member'?'is-selected':''}}" role="tab" aria-selected="{{audience==='member'}}" data-value="member" bindtap="changeAudience" hover-class="library-pressed">我的书籍</button>
+      <button size="default" class="library-tab {{audience==='member'?'is-selected':''}}" role="tab" aria-selected="{{audience==='member'}}" data-value="member" bindtap="changeAudience" hover-class="library-pressed">我的内容</button>
       <button size="default" class="library-tab {{audience==='sample'?'is-selected':''}}" role="tab" aria-selected="{{audience==='sample'}}" data-value="sample" bindtap="changeAudience" hover-class="library-pressed">体验样本</button>
     </view>
     <view wx:if="{{recent}}" class="library-recent">
-      <text class="library-recent-label">最近阅读</text>
+      <text class="library-recent-label">最近学习</text>
       <view class="library-recent-title">{{recent.title}}</view>
       <view class="library-position">{{recent.position}}</view>
       <button size="default" class="library-continue" bindtap="continueReading" hover-class="library-primary-pressed">
         <text>继续学习</text><q-icon name="arrow-right" color="white" size="22"/>
       </button>
     </view>
-    <view class="library-list-heading">
-      <text class="library-section-title">{{audience==='member'?'我的书籍':'体验样本'}}</text>
-      <button size="default" class="library-refresh" bindtap="retry" disabled="{{busy}}" hover-class="library-pressed" aria-label="刷新书架">
-        <q-icon name="refresh" color="muted" size="19"/><text>刷新</text>
-      </button>
+    <view class="library-filters" role="tablist" aria-label="内容类型">
+      <button size="default" wx:for="{{types}}" wx:key="value" class="library-filter {{selectedType===item.value?'is-selected':''}}" role="tab" aria-selected="{{selectedType===item.value}}" data-value="{{item.value}}" bindtap="changeType" hover-class="library-pressed"><text>{{item.label}}</text></button>
     </view>
     <view wx:if="{{error}}" class="notice error" role="alert">
-      {{error}}
-      <button size="default" class="action outline" bindtap="retry" disabled="{{busy}}">重新加载</button>
+      {{error}}<button size="default" class="action outline" bindtap="retry" disabled="{{busy}}">重新加载</button>
     </view>
-    <button size="default" wx:for="{{books}}" wx:key="bookId" class="library-book" data-id="{{item.bookId}}" bindtap="openBook" hover-class="library-row-pressed" aria-label="{{item.title}}，进入章节目录">
-      <view class="library-cover cover-{{item.coverTone}}" aria-hidden="true">
-        <text class="library-cover-initials">{{item.coverInitials}}</text><view class="library-cover-rule"/>
-      </view>
-      <view class="library-book-copy">
-        <view class="library-book-title">{{item.title}}</view>
-        <view class="library-book-meta">{{item.metadata}}</view>
-        <view class="library-book-scope">{{item.contentScope==='sample'?'样本内容':'完整内容'}}</view>
-        <view class="library-audio {{item.audioComplete?'is-available':'is-partial'}}">全文：{{item.audioLabel}}</view>
-      </view>
-      <q-icon name="arrow-right" size="18" color="muted"/>
-    </button>
-    <view wx:if="{{busy}}" class="library-empty" role="status">正在加载书籍…</view>
-    <view wx:elif="{{!books.length && !error}}" class="library-empty">{{audience==='member'?'暂时没有可阅读的内容':'样本正在准备中'}}</view>
-    <button size="default" wx:if="{{nextCursor}}" class="library-more" disabled="{{busy}}" bindtap="loadMore" hover-class="library-pressed">
-      <text>加载更多</text><q-icon name="chevron-down" color="muted" size="19"/>
-    </button>
+    <view class="library-list">
+      <button size="default" wx:for="{{visibleBooks}}" wx:key="bookId" class="library-book" data-id="{{item.bookId}}" bindtap="openBook" hover-class="library-row-pressed" aria-label="{{item.title}}，{{item.typeLabel}}，进入内容目录">
+        <view class="library-cover {{item.coverArt?'is-photo':'is-book'}}" aria-hidden="true">
+          <image wx:if="{{item.coverUrl}}" class="library-cover-image" src="{{item.coverUrl}}" mode="aspectFill" data-id="{{item.bookId}}" binderror="coverError"/>
+          <image wx:elif="{{item.coverArt}}" class="library-cover-atlas art-{{item.coverArt}}" src="/imgs/covers/content-types.jpg" mode="scaleToFill"/>
+          <view wx:else class="library-cover-lettering"><text class="library-cover-title">{{item.coverTitle}}</text><view class="library-cover-rule"/></view>
+        </view>
+        <view class="library-book-copy">
+          <view class="library-book-title">{{item.title}}</view>
+          <view class="library-book-meta">{{item.metadata}}</view>
+          <view class="library-audio {{item.audioComplete?'is-available':'is-partial'}}">{{item.audioLabel}}</view>
+        </view>
+        <q-icon name="arrow-right" size="18" color="muted"/>
+      </button>
+    </view>
+    <view wx:if="{{busy}}" class="library-empty" role="status">正在加载内容…</view>
+    <view wx:if="{{!busy && visibleBooks.length === 0 && !error}}" class="library-empty">{{nextCursor?'已加载内容中暂无此类型，请继续加载':selectedType!=='all'?'暂无此类型的内容':audience==='member'?'暂时没有可学习的内容':'样本正在准备中'}}</view>
+    <button size="default" wx:if="{{nextCursor}}" class="library-more" disabled="{{busy}}" bindtap="loadMore" hover-class="library-pressed"><text>加载更多</text><q-icon name="chevron-down" color="muted" size="19"/></button>
   </view>
 </view>

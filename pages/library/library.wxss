@@ -1,79 +1,43 @@
-/* SPEC v1.3 entry-library.png: warm paper, forest green, editorial book rows. */
-.library-page {
-  --library-paper:#F9F8F5;
-  --library-ink:#101A1C;
-  --library-muted:#657079;
-  --library-green:#244F3E;
-  min-height:100vh;
-  background:var(--library-paper);
-  color:var(--library-ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
-}
-.library-nav { box-sizing:border-box; }
-.library-brand {
-  display:flex;
-  align-items:center;
-  padding-left:40rpx;
-  font-family:"Times New Roman",Georgia,serif;
-  font-size:40rpx;
-  font-weight:600;
-  line-height:1;
-  white-space:nowrap;
-}
-.library-content { padding:8rpx 32rpx calc(24rpx + env(safe-area-inset-bottom)); }
-.library-heading { display:flex; align-items:flex-start; justify-content:space-between; padding:0 8rpx; }
-.library-title {
-  font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;
-  font-size:84rpx;
-  line-height:1.3;
-  font-weight:600;
-  letter-spacing:2rpx;
-}
-.library-settings { display:flex; align-items:center; gap:6rpx; color:var(--library-muted); font-size:25rpx; min-height:80rpx; white-space:nowrap; }
-.library-tabs { display:flex; gap:80rpx; padding:0 10rpx; margin-top:24rpx; margin-bottom:28rpx; }
-.library-tab ,button[size="default"].library-tab{ position:relative; color:var(--library-muted); font-size:29rpx; line-height:1.5; padding:8rpx 0 15rpx; letter-spacing:2rpx; }
-.library-tab.is-selected ,button[size="default"].library-tab.is-selected{ color:var(--library-green); font-weight:600; }
-.library-tab.is-selected::before ,button[size="default"].library-tab.is-selected::before{ content:""; position:absolute; bottom:0; left:0; right:0; height:5rpx; border-radius:5rpx; background:var(--library-green); }
-.library-recent { padding:28rpx 25rpx 25rpx; background:#E8EEE7; border-radius:16rpx; }
-.library-recent-label { display:block; color:#3F6159; font-size:24rpx; margin:0 6rpx 14rpx; line-height:1.5; }
-.library-recent-title { font-family:"Times New Roman","Songti SC",SimSun,serif; font-size:55rpx; line-height:1.07; letter-spacing:-1.7rpx; margin:0 6rpx 18rpx; overflow-wrap:break-word; }
-.library-position { font-family:"Times New Roman","Songti SC",SimSun,serif; font-size:33rpx; color:#36564F; margin:0 6rpx 18rpx; line-height:1.35; overflow-wrap:break-word; }
-.library-continue ,button[size="default"].library-continue{ display:flex; align-items:center; justify-content:center; position:relative; min-height:90rpx; padding:18rpx 56rpx; border-radius:24rpx; background:var(--library-green); color:#fff; font-size:31rpx; line-height:1.5; letter-spacing:2rpx; }
-.library-continue q-icon { position:absolute; right:27rpx; }
-.library-list-heading { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #DCDDD8; margin:38rpx 6rpx 0; min-height:72rpx; padding-bottom:12rpx; }
-.library-section-title { font-family:"Songti SC",SimSun,serif; font-size:34rpx; font-weight:600; }
-.library-refresh ,button[size="default"].library-refresh{ display:flex; align-items:center; gap:14rpx; color:var(--library-muted); font-size:25rpx; padding:12rpx 0 12rpx 24rpx; }
-.library-book ,button[size="default"].library-book{ display:flex; align-items:center; gap:0; text-align:left; width:calc(100% - 12rpx); margin:0 6rpx; padding:19rpx 0 19rpx 10rpx; min-height:206rpx; border-bottom:1px solid #DCDDD8; }
-.library-book:last-of-type ,button[size="default"].library-book:last-of-type{ border-bottom:0; }
-.library-cover { position:relative; flex-shrink:0; align-self:stretch; min-height:170rpx; width:137rpx; border-radius:7rpx; background:#244F3E; color:#E9E9DA; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 5rpx 10rpx #182A2014,inset 2rpx 0 3rpx #17251D40; overflow:hidden; }
-.library-cover::before { content:""; position:absolute; top:0; bottom:0; left:9rpx; width:4rpx; background:#FFFFFF13; box-shadow:2rpx 0 4rpx #FFFFFF18; }
-.cover-sage { background:#818A80; }
-.cover-stone { background:#978C7C; }
-.library-cover-initials { font-family:"Times New Roman",Georgia,serif; font-size:50rpx; line-height:1.15; font-weight:400; }
-.library-cover-rule { width:42rpx; height:1px; background:#D5D9C88A; margin-top:16rpx; }
-.library-book-copy { flex:1; min-width:0; margin-left:40rpx; padding:8rpx 0 4rpx; }
-.library-book-title { font-family:"Times New Roman","Songti SC",SimSun,serif; font-size:36rpx; line-height:1.09; letter-spacing:-.6rpx; margin-bottom:10rpx; overflow-wrap:break-word; }
-.library-book-meta,.library-book-scope,.library-audio { font-size:21rpx; color:var(--library-muted); line-height:1.65; }
-.library-book-meta { overflow-wrap:break-word; }
-.library-audio { letter-spacing:.7rpx; }
-.library-audio.is-available { color:#4B6A5D; }
-.library-audio.is-partial { color:#986D42; }
-.library-book > q-icon { margin-left:10rpx; }
-.library-more ,button[size="default"].library-more{ display:flex; align-items:center; justify-content:center; gap:12rpx; padding:20rpx 0 10rpx; min-height:80rpx; color:var(--library-muted); font-size:25rpx; }
-.library-empty { padding:64rpx 16rpx; color:var(--library-muted); text-align:center; font-size:26rpx; }
-.library-pressed { opacity:.65; }
-.library-primary-pressed { background:#1C4032; }
-.library-row-pressed { background:#E8EEE766; }
-.library-continue,button[size="default"].library-continue,.library-book,button[size="default"].library-book,.library-tab ,button[size="default"].library-tab{ transition:background-color 160ms ease,opacity 160ms ease; }
-@media (prefers-reduced-motion:reduce) { .library-continue,button[size="default"].library-continue,.library-book,button[size="default"].library-book,.library-tab ,button[size="default"].library-tab{ transition:none; } }
-@media (min-width:600px) { .library-content { max-width:540px; margin:0 auto; } }
-
-.library-continue,button[size="default"].library-continue,.library-more,button[size="default"].library-more{width:100%}.library-title{font-weight:700}
-.library-tabs{margin-top:14rpx;margin-bottom:20rpx}.library-recent{padding-top:24rpx;padding-bottom:23rpx}.library-recent-label{margin-bottom:12rpx}.library-recent-title{margin-bottom:16rpx}
-
-/* Covers keep their proportions even when titles wrap. */
-.library-cover{align-self:center;height:182rpx;min-height:182rpx;max-height:182rpx}
-button[size="default"].library-tab{flex:none;width:auto;min-width:0;margin:0}
-.library-tabs{gap:0}
+/* Approved content-library concept, 2026-09-20. All geometry uses rpx;
+ * the system navigation/status/capsule remain native and respect safe areas. */
+.library-page{min-height:100vh;background:#F9F8F5;color:#101A1C;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.library-content{padding:0 32rpx calc(22rpx + env(safe-area-inset-bottom))}
+.library-heading{display:flex;align-items:flex-start;justify-content:space-between;padding:0 8rpx}
+.library-title{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:84rpx;font-weight:700;line-height:1.3;letter-spacing:2rpx}
+.library-settings{display:flex;align-items:center;gap:6rpx;color:#657079;font-size:27rpx;min-height:80rpx;white-space:nowrap}
+.library-tabs{display:flex;padding:0 10rpx;margin-top:24rpx;margin-bottom:28rpx}
+button[size="default"].library-tab{position:relative;flex:none;width:auto;min-width:0;margin:0;padding:8rpx 0 15rpx;color:#657079;font-size:31rpx;line-height:1.5;letter-spacing:2rpx}
 button[size="default"].library-tab + button[size="default"].library-tab{margin-left:80rpx}
-button[size="default"].library-refresh{flex:none;width:auto;margin:0}
+button[size="default"].library-tab.is-selected{color:#244F3E;font-weight:600}
+button[size="default"].library-tab.is-selected::before{content:"";position:absolute;bottom:0;left:0;right:0;height:5rpx;border-radius:5rpx;background:#244F3E}
+.library-recent{padding:28rpx 25rpx 24rpx;background:#EAF0E9;border-radius:16rpx}
+.library-recent-label{display:block;color:#3F6159;font-size:24rpx;margin:0 6rpx 10rpx;line-height:36rpx}
+.library-recent-title{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:55rpx;line-height:1.1;letter-spacing:-1.2rpx;margin:0 6rpx 10rpx;overflow-wrap:break-word}
+.library-position{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:30rpx;color:#36564F;margin:0 6rpx 18rpx;line-height:1.25;overflow-wrap:break-word}
+button[size="default"].library-continue{display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:86rpx;margin:0;padding:16rpx 56rpx;border-radius:22rpx;background:#244F3E;color:#fff;font-size:32rpx;line-height:1.5;letter-spacing:2rpx}
+.library-continue q-icon{position:absolute;right:27rpx}
+.library-filters{display:flex;align-items:center;justify-content:space-between;margin:22rpx 4rpx 0;padding:0 0 12rpx;min-height:88rpx}
+button[size="default"].library-filter{display:flex;align-items:center;justify-content:center;flex:none;min-width:0;width:auto;min-height:78rpx;margin:0;padding:4rpx 0;color:#657079;font-size:27rpx;line-height:1.4;white-space:nowrap}
+.library-filter text{display:block;padding:13rpx 26rpx;border-radius:14rpx}
+.library-filter.is-selected text{background:#EAF0E9;color:#244F3E;font-weight:600}
+.library-list{margin:0 4rpx;border-top:1px solid #DCDDD8}
+button[size="default"].library-book{display:flex;align-items:center;width:100%;margin:0;padding:15rpx 0 15rpx 12rpx;min-height:175rpx;border-bottom:1px solid #DCDDD8;text-align:left}
+button[size="default"].library-book:last-child{border-bottom:0}
+.library-cover{position:relative;flex:none;align-self:center;width:129rpx;height:145rpx;border-radius:7rpx;background:#244F3E;color:#E9E9DA;overflow:hidden;box-shadow:0 3rpx 6rpx #182A2014}
+.library-cover.is-book::before{content:"";position:absolute;top:0;bottom:0;left:8rpx;width:3rpx;background:#FFFFFF13;box-shadow:2rpx 0 4rpx #FFFFFF18}
+.library-cover-lettering{display:flex;flex-direction:column;justify-content:center;height:100%;padding:12rpx 16rpx 12rpx 25rpx}
+.library-cover-title{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-family:"Times New Roman",Georgia,serif;font-size:26rpx;line-height:1;white-space:pre-line;overflow-wrap:break-word}
+.library-cover-rule{width:38rpx;height:1px;background:#D5D9C88A;margin-top:14rpx;flex-shrink:0}
+.library-cover-image{position:absolute;inset:0;width:100%;height:100%}
+.library-cover-atlas{position:absolute;top:0;width:300%;max-width:none;height:100%}
+.art-blog{left:0}.art-movie{left:-100%}.art-tv{left:-200%}
+.library-book-copy{flex:1;min-width:0;margin-left:46rpx;padding:3rpx 0}
+.library-book-title{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:39rpx;line-height:1.1;letter-spacing:-.6rpx;margin-bottom:10rpx;overflow-wrap:break-word}
+.library-book-meta,.library-audio{font-size:24rpx;color:#657079;line-height:1.6;overflow-wrap:break-word}
+.library-audio{letter-spacing:.5rpx}
+.library-audio.is-available{color:#426B58}.library-audio.is-partial{color:#986D42}
+.library-book > q-icon{flex:none;margin-left:10rpx}
+button[size="default"].library-more{display:flex;align-items:center;justify-content:center;gap:12rpx;width:100%;min-height:90rpx;margin:14rpx 0 0;padding:18rpx 0;color:#657079;font-size:27rpx}
+.library-empty{padding:48rpx 16rpx;color:#657079;text-align:center;font-size:26rpx}
+.library-pressed{opacity:.65}.library-primary-pressed{background:#1C4032}.library-row-pressed{background:#E8EEE766}
+@media(min-width:600px){.library-content{max-width:540px;margin:0 auto}}
