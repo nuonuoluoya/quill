@@ -14,6 +14,7 @@ const initialPlayer = () => ({
     loop: false,
     continuous: false,
     error: '',
+    buffering: false,
 });
 exports.initialPlayer = initialPlayer;
 class Player {
@@ -56,6 +57,7 @@ class Player {
     }
     destroy() {
         this.generation++;
+        this.state.buffering = false;
         this.seeking = false;
         const old = this.audio;
         this.audio = null;
@@ -87,6 +89,7 @@ class Player {
     }
     pause() {
         var _a;
+        this.state.buffering = false;
         this.allowed = false;
         this.intent++;
         (_a = this.audio) === null || _a === void 0 ? void 0 : _a.pause();
@@ -245,16 +248,18 @@ class Player {
                 received: this.now(),
             };
             this.state.duration = grant.duration;
-            const audio = this.factory();
+            const audio = this.factory({ mode });
             this.audio = audio;
             audio.autoplay = false;
             audio.loop = false;
             this.setSpeed(this.state.speed, 'playbackRate' in audio);
             this.phaseDeadline = this.now() + 15000;
             const current = () => gen === this.generation && audio === this.audio;
+            let startIssued = false;
             audio.onCanplay(() => {
-                if (!valid() || this.state.status !== 'loading' || this.seeking)
+                if (!valid() || this.state.status !== 'loading' || this.seeking || startIssued)
                     return;
+                startIssued = true;
                 if (this.offset > 0) {
                     this.seeking = true;
                     this.phaseDeadline = this.now() + 10000;
@@ -281,19 +286,28 @@ class Player {
                     return;
                 }
                 this.state.status = 'playing';
+                this.state.buffering = false;
                 this.changedAt = this.now();
             });
             audio.onPause(() => {
-                if (current() && this.state.status === 'playing')
+                if (current() && this.state.status === 'playing') {
                     this.state.status = 'paused';
+                    this.state.buffering = false;
+                }
+            });
+            if (audio.onWaiting) audio.onWaiting(() => {
+                if (current() && this.allowed && this.foreground && this.state.status === 'playing')
+                    this.state.buffering = true;
             });
             audio.onTimeUpdate(() => {
                 if (!current() || this.seeking || !this.allowed || this.state.status !== 'playing')
                     return;
                 const t = audio.currentTime;
                 if (Number.isFinite(t) && t >= 0) {
-                    if (t !== this.state.currentTime)
+                    if (t !== this.state.currentTime) {
                         this.changedAt = this.now();
+                        this.state.buffering = false;
+                    }
                     this.state.currentTime = t;
                 }
             });
@@ -305,6 +319,7 @@ class Player {
                 if (!current() || !this.allowed || !this.foreground)
                     return;
                 this.state.status = 'ended';
+                this.state.buffering = false;
                 this.state.currentTime = grant.duration;
                 this.allowed = false;
                 if (mode === 'sentence' && this.state.loop) {

@@ -1,7 +1,7 @@
 <view class="dock">
   <view class="between heading"><text class="dock-heading">{{state.mode==='sentence'?number+' / '+total:'全文播放 · '+title}}</text><button size="default" wx:if="{{state.mode==='sentence'}}" class="quiet" bindtap="locate">定位原文</button><button size="default" wx:else class="quiet" data-action="sentence" bindtap="action">返回逐句</button></view>
   <block wx:if="{{state.mode==='chapter'}}"><view class="bar"><view style="width:{{percent}}%"/></view><view class="between small muted"><text>{{current}}</text><text>{{duration}}</text></view></block>
-  <view wx:if="{{state.error}}" class="playback-error"><view>音频暂时无法播放</view><view class="small muted">检查网络后重试，原文仍可阅读。</view><button size="default" class="action primary retry-play" disabled="{{frozen}}" data-action="toggle" bindtap="action"><q-icon name="refresh" color="white" size="21"/><text>重试播放</text></button></view>
+  <view wx:if="{{state.error}}" class="playback-error"><view>音频暂时无法播放</view><view class="small muted">{{state.error}}，原文仍可阅读。</view><button size="default" class="action primary retry-play" disabled="{{frozen}}" data-action="toggle" bindtap="action"><q-icon name="refresh" color="white" size="21"/><text>重试播放</text></button></view>
   <view wx:else class="controls">
     <button size="default" class="side" wx:if="{{state.mode==='sentence'}}" disabled="{{frozen || state.index===0}}" data-action="previous" bindtap="action"><q-icon name="previous" size="25"/><text>上一句</text></button>
     <button size="default" wx:else class="side" disabled="{{frozen}}" data-action="restart" bindtap="action"><view class="round-control"><q-icon name="refresh" size="23"/></view><text>从头播放</text></button>
@@ -9,6 +9,8 @@
     <button size="default" class="side" wx:if="{{state.mode==='sentence'}}" disabled="{{frozen || state.index>=chapter.sentences.length-1}}" data-action="next" bindtap="action"><q-icon name="next" size="25"/><text>下一句</text></button>
     <button size="default" wx:else class="side" disabled="{{frozen}}" bindtap="speedPanel"><view class="round-control speed-text">{{state.effectiveSpeed}}×</view></button>
   </view>
+  <view wx:if="{{state.status==='loading'}}" class="small muted hint" role="status">正在准备音频，点击可取消</view>
+  <view wx:elif="{{state.buffering}}" class="small muted hint" role="status">音频缓冲中，可暂停或稍后重试</view>
   <view wx:if="{{speedOpen}}" class="choices"><button size="default" wx:for="{{speeds}}" wx:key="*this" class="choice {{state.speed===item?'active':''}}" data-value="{{item}}" disabled="{{frozen || (!state.speedSupported && item!==1)}}" bindtap="speed">{{item}}×</button></view>
   <view wx:if="{{state.mode==='sentence'}}" class="options"><button size="default" class="speed-text" disabled="{{frozen}}" bindtap="speedPanel">{{state.effectiveSpeed}}×</button><button size="default" class="option {{state.loop?'enabled':''}}" aria-pressed="{{state.loop}}" disabled="{{frozen}}" data-action="loop" bindtap="action"><q-icon name="loop" color="{{state.loop?'green':'muted'}}" size="22"/><text>本句循环</text></button><button size="default" class="option {{state.continuous?'enabled':''}}" aria-pressed="{{state.continuous}}" disabled="{{frozen}}" data-action="continuous" bindtap="action"><q-icon name="continuous" color="{{state.continuous?'green':'muted'}}" size="22"/><text>章内连播</text></button></view>
   <view wx:else class="small muted hint">当前章节播放完成即停止</view>
