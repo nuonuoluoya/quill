@@ -12,3 +12,5 @@
 - project.config.json、project.private.config.json、config/config.js、.env 文件和 .codex-tools/ 只保留在本地，不提交。仓库保留无个人信息的示例配置。
 - 不在小程序代码中保存 AppSecret、访问令牌或服务端密钥。新增配置需要同步示例与初始化说明。
 - 不覆盖用户本地配置，不强制推送，不重写远端历史，除非用户明确要求。
+
+- 项目内新增或替换的单张图片不得超过 200 KB（按 200,000 字节执行），包含 JPEG、PNG、WebP、GIF、SVG 等；现有超限图先压缩。提交前运行 npm run check，图片超限必须处理后再提交。

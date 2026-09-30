@@ -6,8 +6,18 @@ const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
 const ignored = new Set(['frontend', 'contracts', '.codex-tools', 'node_modules', '.git']);
 function walk(dir) { return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => ignored.has(e.name) ? [] : e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]); }
 const files = walk(root);
+const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif', '.bmp', '.ico', '.tif', '.tiff', '.heic', '.heif', '.apng', '.jfif']);
+const maxImageBytes = 200000;
+let imageCount = 0;
 let checked = 0;
 for (const file of files) {
+    if (imageExtensions.has(path.extname(file).toLowerCase())) {
+        const bytes = fs.statSync(file).size;
+        if (bytes > maxImageBytes)
+            throw Error(`图片超过 200 KB：${path.relative(root, file)}，${bytes} 字节，上限 ${maxImageBytes} 字节；请先压缩。`);
+        imageCount++;
+        continue;
+    }
     const text = fs.readFileSync(file, 'utf8');
     if (file.endsWith('.json')) {
         const cfg = JSON.parse(text);
@@ -64,4 +74,4 @@ function visit(node, stack = []) {
     visited.add(node);
 }
 for (const node of dependencies.keys()) visit(node);
-console.log(`通过：${app.pages.length} 个原生页面，${checked} 个 JS 文件，JSON / 模块 / 组件 / 静态图片引用有效。`);
+console.log(`通过：${app.pages.length} 个原生页面，${checked} 个 JS 文件，JSON / 模块 / 组件 / 静态图片引用有效；${imageCount} 张图片均不超过 200 KB（${maxImageBytes} 字节）。`);
