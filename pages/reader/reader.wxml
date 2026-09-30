@@ -1,8 +1,8 @@
 <view class="reader">
   <q-nav title="{{chapterLabel}}" back/>
   <view class="reader-top">
-    <view class="reader-heading"><view class="reader-title serif">{{title}}</view><button size="default" class="chapter-button" bindtap="showChapters">章节<q-icon name="arrow-right" size="15"/></button></view>
-    <view class="search"><q-icon name="search" size="19" color="muted"/><input value="{{query}}" bindinput="search" placeholder="搜索本章" confirm-type="search" maxlength="120"/></view>
+    <view class="reader-heading"><view class="reader-title serif">{{title}}</view><button size="default" class="chapter-button" bindtap="showChapters">{{catalogLabel}}<q-icon name="arrow-right" size="15"/></button></view>
+    <view class="search"><q-icon name="search" size="19" color="muted"/><input value="{{query}}" bindinput="search" placeholder="{{isTv?'搜索本集':'搜索本章'}}" confirm-type="search" maxlength="120"/></view>
     <view class="reader-mode"><text class="muted">{{chapterMode?'正在全文播放':book.contentScope==='sample'?'样本内容':'完整内容'}}</text><button size="default" wx:if="{{chapter && !chapterMode}}" class="full-play" disabled="{{frozen || chapter.chapterAudio.status!=='available'}}" bindtap="fullPlay"><q-icon name="play" color="green" size="14"/><text>{{chapter.chapterAudio.status==='available'?'全文播放':'暂无整章音频'}}</text></button></view>
     <button size="default" wx:if="{{updated}}" class="notice" bindtap="updateContent">本书有新版本 · 点击更新</button>
     <view wx:if="{{offline || notice}}" class="notice"><q-icon name="warning" color="muted" size="19"/><text>{{offline?'网络已断开 · 进度已保存在本机':notice}}</text></view>
@@ -19,10 +19,13 @@
     </block>
   </scroll-view>
   <q-player-dock wx:if="{{chapter}}" chapter="{{chapter}}" title="{{title}}" frozen="{{frozen}}" bindlocate="locate" bindspeed="changeSpeed"/>
-  <q-sheet open="{{sheet}}" title="选择章节" bindclose="hideChapters">
+  <q-sheet open="{{sheet}}" title="{{isTv?'选择剧集':'选择章节'}}" bindclose="hideChapters">
     <view class="sheet-book muted serif">{{book.title}} · {{book.contentScope==='sample'?'样本内容':'完整内容'}}</view>
-    <button size="default" wx:for="{{chapterOptions}}" wx:key="id" class="chapter-row" data-id="{{item.id}}" bindtap="chooseChapter"><text class="chapter-no">{{item.number}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">{{item.sentenceCount}} 句 · {{item.sentenceCount===item.playableCount?'全部可播放':item.playableCount+' 句可播放'}}</text></view><text wx:if="{{item.id===chapter.chapterId}}" class="badge">当前章节</text><q-icon wx:else name="arrow-right" color="muted" size="18"/></button>
-    <view class="sheet-hint">切换章节会停止当前播放</view>
+    <picker wx:if="{{seasons.length}}" class="season-picker" mode="selector" range="{{seasons}}" range-key="label" value="{{seasonIndex}}" bindchange="changeSeason" aria-label="选择季，当前{{selectedSeasonTitle}}">
+      <view class="season-select"><view class="season-select-copy"><text class="season-select-title">{{selectedSeasonTitle}}</text><text class="season-select-count">{{chapterOptions.length}} 集</text></view><view class="season-select-action">切换季<q-icon name="chevron-down" color="green" size="18"/></view></view>
+    </picker>
+    <button size="default" wx:for="{{chapterOptions}}" wx:key="id" class="chapter-row" data-id="{{item.id}}" bindtap="chooseChapter"><text class="chapter-no {{isTv?'episode-no':''}}">{{item.number}}{{isTv?'集':''}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">{{item.sentenceCount}} 句 · {{item.sentenceCount===item.playableCount?'全部可播放':item.playableCount+' 句可播放'}}</text></view><text wx:if="{{item.id===chapter.chapterId}}" class="badge">{{isTv?'当前集':'当前章节'}}</text><q-icon wx:else name="arrow-right" color="muted" size="18"/></button>
+    <view class="sheet-hint">{{isTv?'选择其他集会停止当前播放':'切换章节会停止当前播放'}}</view>
   </q-sheet>
   <q-conflict wx:if="{{book}}" book="{{book}}" bindresolved="resolved"/>
 </view>

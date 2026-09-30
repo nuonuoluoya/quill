@@ -4,9 +4,10 @@ const { progressStore } = require('../../models/progress');
 const { subscribe } = require('../../utils/events');
 const { onIdentityChange } = require('../../models/auth');
 const { navigate, message } = require('../../utils/http');
+const { catalog, seasonIdAt } = require('../../utils/catalog');
 Page({
-    data: { book: null, chapters: [], busy: true, error: '', position: '', status: '', totals: [0, 0] },
-    onLoad(q) { this.id = q.bookId || ''; this.continueRequested = q.continue === '1'; this.alive = true; this.epoch = 0; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; this.setData({ book: null, chapters: [], position: '' }); this.load(); }); this.load(); },
+    data: { book: null, chapters: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, unitLabel: '章', catalogLabel: '章节', catalogSummary: '', busy: true, error: '', position: '', status: '', totals: [0, 0] },
+    onLoad(q) { this.id = q.bookId || ''; this.continueRequested = q.continue === '1'; this.alive = true; this.epoch = 0; this.seasonChoice = ''; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; this.seasonChoice = ''; this.setData({ book: null, chapters: [], seasons: [], selectedSeasonId: '', position: '' }); this.load(); }); this.load(); },
     onShow() { if (this.data.book)
         this.load(); },
     onUnload() { this.alive = false; this.epoch++; this.off(); this.identityOff(); },
@@ -17,10 +18,13 @@ Page({
         if (!this.alive || op !== this.epoch)
             return;
         selectedBook.value = b;
-        this.setData({ book: b, chapters: b.chapters.map((c, i) => ({ ...c, number: String(i + 1).padStart(2, '0') })), totals: b.chapters.reduce((a, c) => [a[0] + c.sentenceCount, a[1] + c.playableCount], [0, 0]) });
+        const local = progressStore.get(b).state.progress;
+        this.setData({ book: b, ...catalog(b, this.seasonChoice, local && local.chapterId), totals: b.chapters.reduce((a, c) => [a[0] + c.sentenceCount, a[1] + c.playableCount], [0, 0]) });
         await progressStore.get(b).pull();
         if (!this.alive || op !== this.epoch)
             return;
+        const saved = progressStore.get(b).state.progress;
+        this.setData(catalog(b, this.seasonChoice, saved && saved.chapterId));
         this.refresh();
         if (this.continueRequested) {
             this.continueRequested = false;
@@ -35,6 +39,7 @@ Page({
         if (this.alive && op === this.epoch)
             this.setData({ busy: false });
     } },
+    changeSeason(e) { const id = seasonIdAt(this.data.seasons, e.detail.value); if (!id || !this.data.book) return; this.seasonChoice = id; this.setData(catalog(this.data.book, id)); },
     open(id, sentence) { const b = this.data.book; if (!b)
         return; navigate('/pages/reader/reader?bookId=' + encodeURIComponent(b.bookId) + '&buildId=' + encodeURIComponent(b.buildId) + '&chapterId=' + encodeURIComponent(id) + (sentence ? '&sentenceId=' + encodeURIComponent(sentence) : '')); },
     openChapter(e) { this.open(e.currentTarget.dataset.id); },

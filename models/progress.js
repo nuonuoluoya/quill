@@ -6,6 +6,7 @@ const sync_1 = require("../core/sync");
 const auth_1 = require("./auth");
 const http_1 = require("../utils/http");
 const content_1 = require("./content");
+const { unitTitle } = require('../utils/catalog');
 const records = new Map(), timers = new Map(), oldest = new Map();
 const tick = (0, events_1.ref)(0), online = (0, events_1.ref)(true), enc = encodeURIComponent;
 const prefix = () => `pidan:${http_1.environment}:${(0, auth_1.identity)()}:`;
@@ -75,7 +76,7 @@ exports.progressStore = {
     },
     position(b, progress) {
         var _a;
-        const chapter = ((_a = b.chapters.find((c) => c.id === progress.chapterId)) === null || _a === void 0 ? void 0 : _a.title) || '已保存章节';
+        const chapter = b.contentType === 'tv' ? unitTitle(b, progress.chapterId) : (((_a = b.chapters.find((c) => c.id === progress.chapterId)) === null || _a === void 0 ? void 0 : _a.title) || '已保存章节');
         try {
             const p = http_1.storage.get(prefix() + `position:${enc(b.bookId)}:${enc(b.textRevision)}`);
             if ((p === null || p === void 0 ? void 0 : p.chapterId) === progress.chapterId &&

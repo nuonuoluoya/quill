@@ -1,4 +1,5 @@
 // Presentation-only extensions to the existing /books contract.
+const { unitTitle } = require('./catalog');
 // Missing contentType is a legacy book; an unknown explicit type is not a book.
 const TYPES = [
   { value: 'all', label: '全部' },
@@ -25,7 +26,7 @@ function present(item) {
     coverInitials: words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'PV',
     coverTitle: String(item.title || '').length <= 28 && String(item.title || '').trim().split(/\s+/).length <= 3 ? String(item.title || '').trim().replace(/\s+/g, '\n') : words.slice(0, 2).map(w => w[0]).join('').toUpperCase(),
     audioLabel, audioComplete: complete,
-    metadata: [language, type.label, Number.isInteger(count) && count >= 0 ? count + ' ' + type.unit : '', item.contentScope === 'sample' ? '样本' : ''].filter(Boolean).join(' · ')
+    metadata: [language, type.label, type.value === 'tv' && Number.isInteger(item.seasonCount) && item.seasonCount > 0 ? item.seasonCount + ' 季' : '', Number.isInteger(count) && count >= 0 ? count + ' ' + type.unit : '', item.contentScope === 'sample' ? '样本' : ''].filter(Boolean).join(' · ')
   };
 }
 function visible(items, type) { return type === 'all' ? items : items.filter(b => b.contentType === type); }
@@ -33,6 +34,7 @@ function recentPosition(item, progress, position) {
   const type = typeOf(item);
   const index = (item.chapters || []).findIndex(c => c.id === progress.chapterId);
   if (index < 0) return type.label + ' · ' + position;
+  if (type.value === 'tv') return type.label + ' · ' + unitTitle(item, progress.chapterId) + ' · ' + (position.split(' · ').pop() || '已保存句子位置');
   const sentence = position.split(' · ').slice(1).join(' · ') || '已保存句子位置';
   return type.label + ' · 第 ' + (index + 1) + ' ' + type.unit + ' · ' + sentence;
 }
