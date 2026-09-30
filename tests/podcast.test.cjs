@@ -39,8 +39,9 @@ afterEach(async () => {
 test('podcast is distinct from blog and counts episodes rather than learning parts', () => {
   const book = podcast();
   assert.equal(book.chapters.length, 722); assert.equal(checkBook(book), book);
-  assert.equal(TYPES.filter(t => t.label === '播客').length, 1);
-  assert.equal(TYPES.find(t => t.value === 'blog').label, '博客');
+  assert.deepEqual(TYPES.map(t => [t.value, t.label]), [
+    ['all', '全部'], ['book', '书籍'], ['podcast', '播客'], ['movie', '电影'], ['tv', '电视剧']
+  ]);
   assert.equal(present(book).metadata, '英文 · 播客 · 365 期');
   assert.doesNotMatch(present({ ...book, episodeCount: undefined }).metadata, /722/);
   assert.equal(catalog(book).catalogSummary, '365 期 · 722 个学习部分');

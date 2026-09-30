@@ -4,13 +4,15 @@ const { unitTitle } = require('./catalog');
 const TYPES = [
   { value: 'all', label: '全部' },
   { value: 'book', label: '书籍', unit: '章' },
-  { value: 'blog', label: '博客', unit: '篇', art: 'blog' },
   { value: 'podcast', label: '播客', unit: '期' },
   { value: 'movie', label: '电影', unit: '段', art: 'movie' },
   { value: 'tv', label: '电视剧', unit: '集', art: 'tv' }
 ];
+// Legacy blog content remains readable in All without adding a separate tab.
+const LEGACY_BLOG = { value: 'blog', label: '博客', unit: '篇', art: 'blog' };
 function typeOf(item) {
   const value = item.contentType || 'book';
+  if (value === 'blog') return LEGACY_BLOG;
   return TYPES.find(t => t.value === value && t.value !== 'all') || { value: 'unknown', label: '其他内容', unit: '节' };
 }
 function present(item) {
