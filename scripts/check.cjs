@@ -43,6 +43,13 @@ for (const file of files.filter(file => file.endsWith('.wxml'))) {
     const cfg = JSON.parse(fs.readFileSync(componentPath + '.json', 'utf8'));
     const using = cfg.usingComponents || {};
     const template = fs.readFileSync(file, 'utf8');
+    for (const [, , src] of template.matchAll(/<image\b[^>]*\bsrc\s*=\s*(['"])([^'"]+)\1/gi)) {
+        if (src.includes('{{') || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(src)) continue;
+        const local = src.split(/[?#]/)[0];
+        const image = local.startsWith('/') ? path.join(root, local) : path.resolve(path.dirname(file), local);
+        if (!fs.existsSync(image) || !fs.statSync(image).isFile())
+            throw Error(`缺少模板图片文件：${file} → ${src}`);
+    }
     for (const [, tag] of template.matchAll(/<(q-[\w-]+)(?=[\s/>])/g)) {
         if (!using[tag]) throw Error(`模板组件未在当前 JSON 声明：${file} → ${tag}`);
     }
@@ -57,4 +64,4 @@ function visit(node, stack = []) {
     visited.add(node);
 }
 for (const node of dependencies.keys()) visit(node);
-console.log(`通过：${app.pages.length} 个原生页面，${checked} 个 JS 文件，JSON / 模块 / 组件引用有效。`);
+console.log(`通过：${app.pages.length} 个原生页面，${checked} 个 JS 文件，JSON / 模块 / 组件 / 静态图片引用有效。`);
