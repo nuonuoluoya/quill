@@ -3,6 +3,13 @@ const { progressStore } = require('./models/progress');
 App({
     visible: true,
     onLaunch() {
+        // Explicit listening should remain audible when an iPhone is in silent mode.
+        if (typeof wx.setInnerAudioOption === 'function') {
+            wx.setInnerAudioOption({
+                obeyMuteSwitch: false,
+                fail() { console.warn('音频静音策略设置失败，将使用播放器实例设置'); }
+            });
+        }
         wx.onNetworkStatusChange(r => { progressStore.online.value = r.isConnected; if (r.isConnected)
             progressStore.resume(); });
         wx.getNetworkType({ success: r => { progressStore.online.value = r.networkType !== 'none'; } });
