@@ -4,7 +4,7 @@ const { unitTitle } = require('./catalog');
 const TYPES = [
   { value: 'all', label: '全部' },
   { value: 'book', label: '书籍', unit: '章' },
-  { value: 'blog', label: '博客', unit: '篇', art: 'blog' },
+  { value: 'blog', label: '播客', unit: '篇', art: 'blog' },
   { value: 'movie', label: '电影', unit: '段', art: 'movie' },
   { value: 'tv', label: '电视剧', unit: '集', art: 'tv' }
 ];
