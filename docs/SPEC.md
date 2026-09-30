@@ -1,8 +1,10 @@
 # Pidan Vocal — 微信小程序版项目规格
 
+2026-09-30 维护约定：规格统一维护于 `D:\Quill-relative\SPEC.md`。任何代码修改前，先更新相关行为、约束与验收标准；代码更新并通过相关检查后，及时提交并推送 GitHub 的 origin。仓库 `docs/SPEC.md` 仅为提交时同步的快照，不独立编辑。
+
 ## 前端维护流程（2026-09-20 起）
 
-- 前端代码目录：`D:\Quill`；规格唯一维护源：本文件 `D:\agent\SPEC\Quill\SPEC.md`。
+- 前端代码目录：`D:\Quill`；规格唯一维护源：本文件 `D:\Quill-relative\SPEC.md`。
 - 前端 GitHub 仓库：`https://github.com/nuonuoluoya/quill`；用于提交和推送的远端为 `origin`。
 - 每次前端修改必须先更新本规格中的相关行为、约束或验收标准，再修改代码；缺陷修复也先明确预期行为与回归验收要求。
 - 前端仓库的 `docs/SPEC.md` 是本文件的同步快照，不独立编辑；提交前同步，使规格与本次实现一同提交和审查。
@@ -12,7 +14,7 @@
 
 ## 后端维护流程（2026-09-20 起）
 
-- 后端代码目录：`D:\quill-backend`；规格唯一维护源：本文件 `D:\agent\SPEC\Quill\SPEC.md`。
+- 后端代码目录：`D:\quill-backend`；规格唯一维护源：本文件 `D:\Quill-relative\SPEC.md`。
 - 后端 GitHub 仓库：`https://github.com/nuonuoluoya/quill-backend`；Git 远端 `origin` 指向该仓库，首次关联时检查并保留已有远端历史。
 - 每次后端修改必须先更新本规格中的相关行为、接口、约束或验收标准，再修改代码；修复缺陷时先补充或明确预期行为与回归验收要求。
 - 实现后运行与变更相关的检查；按后端 `AGENTS.md` 同步 README、契约和配置示例。
