@@ -6,7 +6,7 @@
 
 首次克隆仓库后，在项目目录执行 `npm run setup`（无需安装依赖），从示例生成本地配置，然后导入微信开发者工具。此命令不会覆盖已有配置。
 
-仓库提交 `project.config.example.json` 和 `config/config.example.js`；实际使用的 `project.config.json`、`project.private.config.json`、`config/config.js` 以及 `.env` 文件均由 `.gitignore` 排除。AppID 是公开标识，但此项目统一将个人 AppID、接口地址和运营联系方式留在本地。AppSecret、Token 等密钥必须只保存在后端；Git 忽略不能阻止前端配置被打进小程序包。
+仓库提交 `project.config.example.json` 和 `config/config.example.js`；实际使用的 `project.config.json`、`project.private.config.json`、`config/config.js` 以及 `.env` 文件均由 `.gitignore` 排除。AppID 是公开标识，但此项目统一将个人 AppID、实际运行配置和运营联系方式留在本地；公开生产 API 地址保留在生产示例中。AppSecret、Token 等密钥必须只保存在后端；Git 忽略不能阻止前端配置被打进小程序包。
 
 - AppID：根目录 `project.config.json` 的 `appid`。将 `touristappid` 替换为自己的微信小程序 AppID。后端微信登录配置须使用同一个 AppID。AppSecret 只放后端。
 - API 地址和环境隔离：`config/config.js` 的 `apiBaseUrl`、`environment`。
@@ -116,3 +116,21 @@ tests/ scripts/              Node 校验（不进入小程序包）
 正式部署应同时配置 API 的 request 合法域名和媒体的 downloadFile 合法域名，媒体接口的完整 GET 须返回 200 及正确的 Content-Type。本地局域网调试继续遵循上面的真机调试说明。微信平台单次下载上限为 200 MB，下载失败不会静默退回网络流式单句播放。依据：[音频事件](https://developers.weixin.qq.com/miniprogram/dev/api/media/audio/InnerAudioContext.html)、[文件下载](https://developers.weixin.qq.com/miniprogram/dev/api/network/download/wx.downloadFile.html)。
 
 新增回归覆盖重复 canplay、下载前不发声、取消/切句/退后台后迟到结果、临时文件清理、HTTP 错误及有界重试、恢复定位和全文缓冲。静态检查及 40 项自动化测试通过；iPhone 实际音频仍需重新编译后复测，不将这些测试描述为真机验收通过。
+
+## 生产环境接入与预览（2026-09-30）
+
+生产 API 为 `https://codingluke.site/v1`。按 `config/config.production.example.js` 将本地 `config/config.js` 的 `environment` 设为 `production`，将 `apiBaseUrl` 设为该地址，保留其他个人配置。AppSecret、Token 不进入前端。开发示例仍为 `config/config.example.js`；切回本地时同时恢复 `development` 和本地 API 地址，再重新编译。
+
+会话键 `pidan:<environment>:session`，游客/账号进度、最近学习、速度偏好和待同步队列均按环境隔离。切换环境不清空开发数据，不复制 Token 或同步队列；章节缓存只存在于当前运行内存，必须重新编译再使用。首次生产登录重新取得 `wx.login` code，由生产服务创建其自己的会话。
+
+微信公众平台「开发管理 → 开发设置 → 服务器域名」的 **request、downloadFile** 两项都应包含 `https://codingluke.site`（不带 `/v1`，保留原有域名）。管理员已确认两项配置完成；前后端有效 AppID 已核对一致。`project.config.json` 和优先级更高的 `project.private.config.json` 均须 `setting.urlCheck: true`，不要勾选“不校验合法域名、TLS 版本及 HTTPS 证书”。重新编译后再预览。
+
+本次前端接入开始时，生产只有 **2 本公开样本、6 章、48 句、52 个媒体文件**；此前本地私人内容与授权未同步，因此当时“我的内容”为空不代表加载故障。样本从“体验样本 → 书籍”进入。用户随后明确授权 Harry Potter 全部 7 部作为私人内容上线，由独立后端任务导入、发布和授权；前端通过刷新展示实际结果，导入进度以对应后端记录为准。
+
+执行 `npm run check`、`npm test`、`npm run build`，再执行 `node scripts/smoke-api.cjs` 通过当前配置访问真实公开 API。测试包含环境切换时不读取开发会话/队列、重新登录采用新 code、生产退出不删除开发数据。自动化测试不证明手机音频已经通过验收。
+
+本次范围是生产联调与预览，不执行上传体验版、提审或正式发布。手机验收应分别检查：样本正文、单句完整下载后播放、取消/快速切句/暂停/后台不续播，重新微信登录、私有书架空状态和样本学习进度恢复，Wi-Fi 与蜂窝网络。iPhone 的偶发播放中断仍需实机复测。
+
+本次联调证据：`npm run check`、41 项测试与 `npm run build` 通过；真实生产 API 两本样本正文及逐句/整章授权通过。开启域名校验后的开发者工具中，真实 `wx.login` 新 code 换码返回 201、`GET /me` 返回 200，身份与当前生产会话一致；进入样本目录与正文正常。单句事件顺序为完整下载 200 → 临时文件 → 播放 → 时间推进；取消加载没有播放事件，快速切句只有最后选中句启动。整章音频实际播放且时间推进，调用页面前后台生命周期后保持暂停；样本学习状态显示“进度已同步”。这些是开发者工具证据，不等同于手机锁屏、来电或 iPhone 断续问题已经通过。
+
+预览二维码已成功生成，代码包为 135,932 字节；未执行 upload、提审或发布。重新编译后“继续学习”恢复到样本第 6 句，真实云进度 GET 返回 200、版本 3，恢复页面不自动播放。二维码属于临时预览产物，不进入 Git。用户既有的 `imgs/covers/content-types.jpg` 删除保持原样且不纳入本次提交；当前公开书籍采用文字封面，博客/影视本地缺省图片在该文件缺失时仍需单独处理。

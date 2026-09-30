@@ -50,6 +50,10 @@
       {
         "value": "config/config.example.js",
         "type": "file"
+      },
+      {
+        "value": "config/config.production.example.js",
+        "type": "file"
       }
     ]
   },
