@@ -34,6 +34,7 @@ Page({
         return; progressStore.update(b, { bookId: b.bookId, textRevision: b.textRevision, sourceBuildId: b.buildId, chapterId: c.chapterId, sentenceId: s.id, preferredSpeed: playerState.speed, updatedAt: new Date().toISOString() }, s.index); },
     async load(newest = false) { const op = ++this.epoch; player.dispose(); this.limit = 40; this.renderKey = ''; this.setData({ busy: true, error: '', notice: '', query: '', chapter: null, rows: [] }); try {
         const b = this.buildId && !newest ? await api('/books/' + encodeURIComponent(this.bookId) + '/builds/' + encodeURIComponent(this.buildId)).then(checkBook) : await content.book(this.bookId);
+        if (b.visibility === 'sample-public') throw Error('体验样本已下线，请返回内容库');
         const id = b.chapters.some(c => c.id === this.chapterId) ? this.chapterId : (b.chapters.find(c => c.sentenceCount > 0) || b.chapters[0] || {}).id;
         if (!id)
             throw Error('本书暂无章节');

@@ -17,6 +17,7 @@ Page({
         const b = await content.book(this.id);
         if (!this.alive || op !== this.epoch)
             return;
+        if (b.visibility === 'sample-public') throw Error('体验样本已下线，请返回内容库');
         selectedBook.value = b;
         const local = progressStore.get(b).state.progress;
         this.setData({ book: b, ...catalog(b, this.seasonChoice, local && local.chapterId), totals: b.chapters.reduce((a, c) => [a[0] + c.sentenceCount, a[1] + c.playableCount], [0, 0]) });

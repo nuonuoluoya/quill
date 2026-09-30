@@ -45,7 +45,7 @@ async function login() {
         }));
         // #endif
         if (!code)
-            throw new http_1.ApiError('WECHAT_REQUIRED', '请在微信小程序内登录；本地预览可直接体验样本');
+            throw new http_1.ApiError('WECHAT_REQUIRED', '请在微信小程序内登录后查看你的内容');
         const next = await (0, http_1.request)('/auth/wechat', 'POST', { code });
         if (epoch !== exports.auth.epoch)
             throw new http_1.ApiError('STALE_IDENTITY', '登录操作已取消');

@@ -5,16 +5,16 @@ const { message, navigate } = require('../../utils/http');
 const { TYPES, present, visible, recentPosition } = require('../../utils/library-presentation');
 
 Page({
-  data: { books: [], visibleBooks: [], types: TYPES, selectedType: 'all', audience: 'sample', nextCursor: null, busy: false, error: '', recent: null, loggedIn: false },
+  data: { books: [], visibleBooks: [], types: TYPES, selectedType: 'all', nextCursor: null, busy: false, error: '', recent: null, loggedIn: false },
   onLoad() {
     this.alive = true;
     this.epoch = 0;
     this.recentEpoch = 0;
-    this.setData({ audience: auth.session ? 'member' : 'sample' });
+    this.setData({ loggedIn: !!auth.session });
     this.off = onIdentityChange(() => {
       this.epoch++;
       this.recentEpoch++;
-      this.setData({ books: [], visibleBooks: [], recent: null, loggedIn: !!auth.session, audience: auth.session ? 'member' : 'sample', nextCursor: null, busy: false });
+      this.setData({ books: [], visibleBooks: [], recent: null, loggedIn: !!auth.session, nextCursor: null, busy: false, error: '' });
       this.load(true);
     });
     this.load(true);
@@ -24,9 +24,15 @@ Page({
   onPullDownRefresh() { this.load(true).finally(() => wx.stopPullDownRefresh()); },
   onReachBottom() { return this.loadMore(); },
   async load(reset = true) {
+    if (!auth.session) {
+      this.epoch++;
+      this.recentEpoch++;
+      this.setData({ books: [], visibleBooks: [], recent: null, nextCursor: null, busy: false, error: '', loggedIn: false });
+      return;
+    }
     if (this.data.busy) return;
     const op = ++this.epoch;
-    const { audience, selectedType } = this.data;
+    const { selectedType } = this.data;
     let cursor = reset ? undefined : this.data.nextCursor;
     this.setData({ busy: true, error: '' });
     try {
@@ -35,7 +41,7 @@ Page({
       // The existing API paginates all types. Scan bounded batches so a type
       // absent from the first page is not incorrectly reported as empty.
       for (let page = 0; page < 5; page++) {
-        const r = await content.list(audience, cursor);
+        const r = await content.list('member', cursor);
         if (!this.alive || op !== this.epoch) return;
         r.items.forEach(b => byId.set(b.bookId, present(b)));
         const books = [...byId.values()];
@@ -55,25 +61,20 @@ Page({
   },
   async loadRecent() {
     const op = ++this.recentEpoch;
+    if (!auth.session) { this.setData({ recent: null }); return; }
     const id = progressStore.recent();
     if (!id) { this.setData({ recent: null }); return; }
     try {
       const b = await content.book(id);
       if (!this.alive || op !== this.recentEpoch) return;
+      if (b.visibility !== 'private') { this.setData({ recent: null }); return; }
       const p = progressStore.get(b).state.progress;
       this.setData({ recent: p ? { ...b, position: recentPosition(b, p, progressStore.position(b, p)) } : null });
     } catch (_) {
       if (this.alive && op === this.recentEpoch) this.setData({ recent: null });
     }
   },
-  changeAudience(e) {
-    const audience = e.currentTarget.dataset.value;
-    if (!['member', 'sample'].includes(audience) || audience === this.data.audience) return;
-    if (audience === 'member' && !auth.session) { navigate('/pages/settings/settings'); return; }
-    this.epoch++;
-    this.setData({ audience, books: [], visibleBooks: [], nextCursor: null, busy: false, error: '' });
-    return this.load(true);
-  },
+  signIn() { navigate('/pages/settings/settings'); },
   changeType(e) {
     const selectedType = e.currentTarget.dataset.value;
     if (!TYPES.some(t => t.value === selectedType) || selectedType === this.data.selectedType) return;

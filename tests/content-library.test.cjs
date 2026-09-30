@@ -5,6 +5,7 @@ let definition;
 global.Page = p => { definition = p; };
 global.wx = { getStorageSync() {}, getStorageInfoSync: () => ({ keys: [] }), nextTick: f => f() };
 const { content } = require('../models/content');
+require('../models/auth').auth.session = { user: { id: 'test-member' } };
 const { progressStore } = require('../models/progress');
 progressStore.recent = () => null;
 const tick = () => new Promise(r => setImmediate(r));
