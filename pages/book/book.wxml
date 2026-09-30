@@ -5,19 +5,20 @@
   <view wx:elif="{{!book}}" class="empty">正在加载章节目录…</view>
   <block wx:if="{{book}}">
     <view class="title">{{book.title}}</view>
-    <text class="muted book-meta">{{book.contentScope==='sample'?'样本内容':'完整内容'}} · {{catalogSummary}} · {{book.language==='en'?'英文':book.language}}</text>
+    <text class="muted book-meta">{{isPodcast?'播客节目':book.contentScope==='sample'?'样本内容':'完整内容'}} · {{catalogSummary}} · {{book.language==='en'?'英文':book.language}}</text>
     <view wx:if="{{position}}" class="card">
       <text class="label">上次读到</text><view class="book-position serif">{{position}}</view>
       <button size="default" class="action primary" bindtap="continueReading" hover-class="pressed">继续学习</button>
     </view>
     <view class="between list-header"><text class="section-title">{{catalogLabel}}</text><text class="small muted">{{totals[0]}} 句 · {{totals[1]}} 句可播放</text></view>
+    <q-podcast-catalog wx:if="{{isPodcast}}" id="podcast-catalog" book="{{book}}" active-chapter-id="{{podcastChapterId}}" bindselect="openPart"/>
     <picker wx:if="{{seasons.length}}" class="season-picker" mode="selector" range="{{seasons}}" range-key="label" value="{{seasonIndex}}" bindchange="changeSeason" aria-label="选择季，当前{{selectedSeasonTitle}}">
       <view class="season-select"><view class="season-select-copy"><text class="season-select-title">{{selectedSeasonTitle}}</text><text class="season-select-count">{{chapters.length}} 集</text></view><view class="season-select-action">切换季<q-icon name="chevron-down" color="green" size="18"/></view></view>
     </picker>
     <button size="default" wx:for="{{chapters}}" wx:key="id" class="chapter-row" data-id="{{item.id}}" bindtap="openChapter" hover-class="row-pressed">
       <text class="chapter-no {{isTv?'episode-no':''}}">{{item.number}}{{isTv?'集':''}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">{{item.sentenceCount}} 句 · {{item.sentenceCount===item.playableCount?'全部可播放':item.playableCount+' 句可播放'}}</text></view><q-icon name="arrow-right" size="18" color="muted"/>
     </button>
-    <view wx:if="{{!chapters.length}}" class="empty">{{isTv?'暂无剧集':'本书暂无章节'}}</view>
+    <view wx:if="{{!isPodcast && !chapters.length}}" class="empty">{{isTv?'暂无剧集':'本书暂无章节'}}</view>
     <view class="book-status"><q-icon name="cloud" color="muted" size="20"/><text>{{status}}</text></view>
     <q-conflict book="{{book}}" bindresolved="refresh"/>
   </block>

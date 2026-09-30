@@ -5,6 +5,7 @@ exports.checkBook = checkBook;
 exports.checkChapter = checkChapter;
 const auth_1 = require("./auth");
 const http_1 = require("../utils/http");
+const { validPodcast } = require('../utils/podcast');
 const enc = encodeURIComponent, chapterCache = new Map();
 async function read(path) {
     try {
@@ -42,6 +43,7 @@ function checkBook(b) {
             invalid();
         ids.add(c.id);
     }
+    if (b.contentType === 'podcast' && !validPodcast(b)) invalid();
     return b;
 }
 function checkChapter(c, b) {
@@ -53,6 +55,7 @@ function checkChapter(c, b) {
         !Array.isArray(c.sentences) ||
         c.sentences.length !== e.sentenceCount)
         invalid();
+    if (b.contentType === 'podcast' && (c.episodeId !== e.episodeId || c.part !== e.part)) invalid();
     const a = c.chapterAudio;
     if (!a || !['available', 'unavailable'].includes(a.status) || !Array.isArray(a.reasons))
         invalid();
@@ -88,8 +91,8 @@ function checkChapter(c, b) {
     return c;
 }
 exports.content = {
-    async list(audience, cursor) {
-        const p = await read(`/books?audience=${audience}&limit=20${cursor ? `&cursor=${enc(cursor)}` : ''}`);
+    async list(audience, cursor, contentType) {
+        const p = await read(`/books?audience=${audience}&limit=20${contentType ? `&contentType=${enc(contentType)}` : ''}${cursor ? `&cursor=${enc(cursor)}` : ''}`);
         if (!Array.isArray(p === null || p === void 0 ? void 0 : p.items) || !(p.nextCursor === null || typeof p.nextCursor === 'string'))
             invalid();
         return p;

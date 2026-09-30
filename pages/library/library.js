@@ -41,14 +41,14 @@ Page({
       // The existing API paginates all types. Scan bounded batches so a type
       // absent from the first page is not incorrectly reported as empty.
       for (let page = 0; page < 5; page++) {
-        const r = await content.list('member', cursor);
+        const r = selectedType === 'podcast' ? await content.list('member', cursor, 'podcast') : await content.list('member', cursor);
         if (!this.alive || op !== this.epoch) return;
         r.items.forEach(b => byId.set(b.bookId, present(b)));
         const books = [...byId.values()];
         const addedMatches = visible(r.items.map(present), selectedType).length;
         if (r.nextCursor && (r.nextCursor === cursor || seen.has(r.nextCursor))) throw Error('分页暂时不可用，请下拉刷新');
         this.setData({ books, visibleBooks: visible(books, selectedType), nextCursor: r.nextCursor });
-        if (!r.nextCursor || addedMatches || selectedType === 'all') break;
+        if (!r.nextCursor || addedMatches || selectedType === 'all' || selectedType === 'podcast') break;
         seen.add(r.nextCursor);
         cursor = r.nextCursor;
       }
@@ -78,6 +78,11 @@ Page({
   changeType(e) {
     const selectedType = e.currentTarget.dataset.value;
     if (!TYPES.some(t => t.value === selectedType) || selectedType === this.data.selectedType) return;
+    if (selectedType === 'podcast' || this.data.selectedType === 'podcast') {
+      this.epoch++;
+      this.setData({ selectedType, books: [], visibleBooks: [], nextCursor: null, busy: false, error: '' });
+      return this.load(true);
+    }
     const pendingInitial = !this.data.books.length && (this.data.busy || !!this.data.error);
     this.epoch++;
     const visibleBooks = visible(this.data.books, selectedType);

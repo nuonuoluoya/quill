@@ -18,13 +18,13 @@ function page() {
 const choose = value => ({ currentTarget: { dataset: { value } } });
 
 test('类型、单位和音频状态来自元数据，兼容旧书籍且未知类型不冒充书籍', () => {
-  for (const [type, label, unit] of [['book','书籍','章'],['blog','播客','篇'],['movie','电影','段'],['tv','电视剧','集']]) {
+  for (const [type, label, unit] of [['book','书籍','章'],['blog','博客','篇'],['movie','电影','段'],['tv','电视剧','集']]) {
     const b = present(item('x', type));
     assert.equal(b.metadata, `英文 · ${label} · 8 ${unit}`);
     assert.equal(b.audioLabel, '全文音频可用');
   }
   assert.equal(present(item('old', undefined)).contentType, 'book');
-  assert.equal(present(item('x', 'podcast')).contentType, 'unknown');
+  assert.equal(present(item('x', 'future-type')).contentType, 'unknown');
   assert.equal(present({ ...item('x'), chapterAudioAvailableCount: 2 }).audioLabel, '部分全文音频可用');
   assert.match(present({ ...item('x'), contentScope: 'sample' }).metadata, /样本/);
   assert.equal(present({ ...item('x'), coverUrl: 'http://unsafe.invalid/a.jpg' }).coverUrl, '');

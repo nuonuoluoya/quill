@@ -21,9 +21,9 @@
         <text>继续学习</text><q-icon name="arrow-right" color="white" size="22"/>
       </button>
     </view>
-    <view class="library-filters" role="tablist" aria-label="内容类型">
+    <scroll-view scroll-x class="library-filter-scroll" enable-flex><view class="library-filters" role="tablist" aria-label="内容类型">
       <button size="default" wx:for="{{types}}" wx:key="value" class="library-filter {{selectedType===item.value?'is-selected':''}}" role="tab" aria-selected="{{selectedType===item.value}}" data-value="{{item.value}}" bindtap="changeType" hover-class="library-pressed"><text>{{item.label}}</text></button>
-    </view>
+    </view></scroll-view>
     <view wx:if="{{error}}" class="notice error" role="alert">
       {{error}}<button size="default" class="action outline" bindtap="retry" disabled="{{busy}}">重新加载</button>
     </view>

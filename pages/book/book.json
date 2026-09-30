@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "章节目录",
   "usingComponents": {
+    "q-podcast-catalog": "/components/podcast-catalog/podcast-catalog",
     "q-icon": "/components/icon/icon",
     "q-conflict": "/components/conflict/conflict",
     "q-nav": "/components/nav/nav"

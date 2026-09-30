@@ -8,8 +8,9 @@ const { searchSentences, playable } = require('../../utils/contracts');
 const { subscribe } = require('../../utils/events');
 const { message } = require('../../utils/http');
 const { catalog, unitTitle, seasonIdAt } = require('../../utils/catalog');
+const { episodeFor } = require('../../utils/podcast');
 Page({
-    data: { chapterLabel: '章节', chapterOptions: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, catalogLabel: '章节', unitLabel: '章', isTv: false, chapterMode: false, offline: false, book: null, chapter: null, title: '听力阅读', rows: [], query: '', target: '', sheet: false, error: '', notice: '', updated: false, busy: true, frozen: false, hiddenCurrent: false, status: '', more: false },
+    data: { chapterLabel: '章节', chapterOptions: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, catalogLabel: '章节', unitLabel: '章', isTv: false, isPodcast: false, chapterMode: false, offline: false, book: null, chapter: null, title: '听力阅读', rows: [], query: '', target: '', sheet: false, error: '', notice: '', updated: false, busy: true, frozen: false, hiddenCurrent: false, status: '', more: false },
     onLoad(q) { this.bookId = q.bookId || ''; this.buildId = q.buildId || ''; this.chapterId = q.chapterId || ''; this.sentenceId = q.sentenceId || ''; this.alive = true; this.networkChange = e => { if (this.alive) this.setData({ offline: !e.isConnected }); }; if (wx.onNetworkStatusChange) wx.onNetworkStatusChange(this.networkChange); if (wx.getNetworkType) wx.getNetworkType({ success: e => this.networkChange({ isConnected: e.networkType !== 'none' }) }); this.active = true; this.epoch = 0; this.limit = 40; this.userScrolled = false; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; player.dispose(); this.setData({ book: null, chapter: null, rows: [] }); this.load(); }); this.load(); },
     onShow() { this.active = true; player.setForeground(true); this.checkAccess(); clearInterval(this.timer); this.timer = setInterval(() => this.checkAccess(), 60000); },
     onHide() { this.active = false; player.setForeground(false); progressStore.flushAll(); clearInterval(this.timer); },
@@ -48,7 +49,8 @@ Page({
         const notice = index < 0 ? '原句子不在当前正文中，已定位章节开头。' : '';
         index = Math.max(0, index);
         const { chapters: chapterOptions, ...navigation } = catalog(b, '', id);
-        this.setData({ ...navigation, chapterLabel: unitTitle(b, id), chapterOptions, book: b, chapter: c, title: b.chapters.find(x => x.id === id).title, updated: false, notice });
+        const episode = b.contentType === 'podcast' ? episodeFor(b, id) : null;
+        this.setData({ ...navigation, chapterLabel: unitTitle(b, id), chapterOptions, book: b, chapter: c, title: episode ? episode.title : b.chapters.find(x => x.id === id).title, updated: false, notice });
         player.load(b, c, index);
         player.setForeground(this.active);
         const p = progressStore.get(b).state.progress;
@@ -106,6 +108,7 @@ Page({
     showChapters() { if (!this.data.book || !this.data.chapter) return; const { chapters: chapterOptions, ...navigation } = catalog(this.data.book, '', this.data.chapter.chapterId); this.setData({ ...navigation, chapterOptions, sheet: true }); },
     changeSeason(e) { const id = seasonIdAt(this.data.seasons, e.detail.value); if (!id || !this.data.book) return; const { chapters: chapterOptions, ...navigation } = catalog(this.data.book, id); this.setData({ ...navigation, chapterOptions }); },
     hideChapters() { this.setData({ sheet: false }); },
+    choosePart(e) { return this.chooseChapter({ currentTarget: { dataset: { id: e.detail.chapterId } } }); },
     async chooseChapter(e) { const id = e.currentTarget.dataset.id; if (!this.data.book || !this.data.book.chapters.some(c => c.id === id)) return; this.setData({ sheet: false }); if (this.data.chapter && this.data.chapter.chapterId === id) return; this.chapterId = id; this.sentenceId = ''; const op = this.epoch + 1; await this.load(); if (this.alive && this.epoch === op && this.data.chapter && this.data.chapter.chapterId === id)
         this.save(); },
     fullPlay() { if (!this.data.frozen)

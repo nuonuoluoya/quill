@@ -2,7 +2,7 @@ const { player, playerState } = require('../../models/player');
 const { speeds, timeLabel } = require('../../utils/contracts');
 const { subscribe } = require('../../utils/events');
 Component({
-    properties: { chapter: Object, title: String, frozen: Boolean },
+    properties: { chapter: Object, title: String, frozen: Boolean, isPodcast: Boolean },
     data: { state: {}, speeds, speedOpen: false, percent: 0, current: '00:00', duration: '00:00' },
     lifetimes: { attached() { this.off = subscribe(() => this.refresh()); this.refresh(); }, detached() { this.off(); } },
     methods: {

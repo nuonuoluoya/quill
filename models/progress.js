@@ -76,7 +76,7 @@ exports.progressStore = {
     },
     position(b, progress) {
         var _a;
-        const chapter = b.contentType === 'tv' ? unitTitle(b, progress.chapterId) : (((_a = b.chapters.find((c) => c.id === progress.chapterId)) === null || _a === void 0 ? void 0 : _a.title) || '已保存章节');
+        const chapter = ['tv', 'podcast'].includes(b.contentType) ? unitTitle(b, progress.chapterId) : (((_a = b.chapters.find((c) => c.id === progress.chapterId)) === null || _a === void 0 ? void 0 : _a.title) || '已保存章节');
         try {
             const p = http_1.storage.get(prefix() + `position:${enc(b.bookId)}:${enc(b.textRevision)}`);
             if ((p === null || p === void 0 ? void 0 : p.chapterId) === progress.chapterId &&

@@ -13,7 +13,7 @@
 .library-position{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:30rpx;color:#36564F;margin:0 6rpx 18rpx;line-height:1.25;overflow-wrap:break-word}
 button[size="default"].library-continue{display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:86rpx;margin:0;padding:16rpx 56rpx;border-radius:22rpx;background:#244F3E;color:#fff;font-size:32rpx;line-height:1.5;letter-spacing:2rpx}
 .library-continue q-icon{position:absolute;right:27rpx}
-.library-filters{display:flex;align-items:center;justify-content:space-between;margin:22rpx 4rpx 0;padding:0 0 12rpx;min-height:88rpx}
+.library-filter-scroll{width:100%}.library-filters{display:flex;align-items:center;justify-content:space-between;margin:22rpx 4rpx 0;padding:0 0 12rpx;min-height:88rpx;min-width:max-content}
 button[size="default"].library-filter{display:flex;align-items:center;justify-content:center;flex:none;min-width:0;width:auto;min-height:78rpx;margin:0;padding:4rpx 0;color:#657079;font-size:27rpx;line-height:1.4;white-space:nowrap}
 .library-filter text{display:block;padding:13rpx 26rpx;border-radius:14rpx}
 .library-filter.is-selected text{background:#EAF0E9;color:#244F3E;font-weight:600}

@@ -1,0 +1,18 @@
+<view class="podcast-catalog {{compact?'compact':''}}">
+  <view class="episode-search"><q-icon name="search" size="18" color="muted"/><input value="{{query}}" bindinput="search" placeholder="搜索期号或主题" aria-label="搜索播客期号或主题" confirm-type="search" maxlength="120"/><button size="default" wx:if="{{query}}" class="clear" bindtap="clearSearch" aria-label="清空期号或主题搜索">清空</button></view>
+  <view class="result-count" role="status">{{query?'找到 '+resultCount+' 期':'共 '+resultCount+' 期 · 选择一期展开学习内容'}}</view>
+  <scroll-view wx:if="{{rows.length}}" class="episode-list" scroll-y scroll-into-view="{{scrollTarget}}">
+  <view wx:for="{{rows}}" wx:key="id" id="episode-{{item.id}}" class="episode {{expandedId===item.id?'expanded':''}}">
+    <button size="default" class="episode-heading" data-id="{{item.id}}" bindtap="toggle" aria-expanded="{{expandedId===item.id}}" aria-label="第{{item.number}}期，{{item.title}}，{{expandedId===item.id?'收起':'展开'}}">
+      <view class="episode-copy"><text class="episode-number">第 {{item.number}} 期</text><text class="episode-title">{{item.title}}</text></view><view class="chevron {{expandedId===item.id?'up':''}}"><q-icon name="chevron-down" color="muted" size="18"/></view>
+    </button>
+    <view wx:if="{{expandedId===item.id}}" class="parts">
+      <button size="default" wx:for="{{item.parts}}" wx:for-item="part" wx:key="key" class="part {{part.current?'current':''}}" data-id="{{part.chapterId}}" bindtap="select" disabled="{{!part.available}}" aria-label="第{{item.number}}期，{{part.label}}，{{part.available?'进入学习':'素材缺失'}}">
+        <view class="part-copy"><text class="part-label">{{part.label}}</text><text class="part-meta">{{part.available?part.sentenceCount+' 句 · '+part.playableCount+' 句可播放':'素材缺失'}}</text></view><text wx:if="{{part.current}}" class="current-label">当前部分</text><q-icon wx:elif="{{part.available}}" name="arrow-right" color="green" size="18"/>
+      </button>
+    </view>
+  </view>
+  </scroll-view>
+  <view wx:if="{{!rows.length}}" class="no-results">{{query?'没有匹配的期号或主题':'暂无节目内容'}}</view>
+  <view wx:if="{{pageCount>1}}" class="pagination"><button size="default" bindtap="turn" data-delta="-1" disabled="{{page===0}}">上一页</button><text>{{page+1}} / {{pageCount}}</text><button size="default" bindtap="turn" data-delta="1" disabled="{{page+1>=pageCount}}">下一页</button></view>
+</view>
