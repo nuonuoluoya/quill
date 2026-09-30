@@ -25,9 +25,6 @@ button[size="default"].library-book:last-child{border-bottom:0}
 .library-cover-lettering{display:flex;flex-direction:column;justify-content:center;height:100%;padding:12rpx 16rpx 12rpx 25rpx}
 .library-cover-title{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-family:"Times New Roman",Georgia,serif;font-size:26rpx;line-height:1;white-space:pre-line;overflow-wrap:break-word}
 .library-cover-rule{width:38rpx;height:1px;background:#D5D9C88A;margin-top:14rpx;flex-shrink:0}
-.library-cover-image{position:absolute;inset:0;width:100%;height:100%}
-.library-cover-atlas{position:absolute;top:0;width:300%;max-width:none;height:100%}
-.art-blog{left:0}.art-movie{left:-100%}.art-tv{left:-200%}
 .library-book-copy{flex:1;min-width:0;margin-left:46rpx;padding:3rpx 0}
 .library-book-title{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:39rpx;line-height:1.1;letter-spacing:-.6rpx;margin-bottom:10rpx;overflow-wrap:break-word}
 .library-book-meta,.library-audio{font-size:24rpx;color:#657079;line-height:1.6;overflow-wrap:break-word}

@@ -90,10 +90,6 @@ Page({
     if (pendingInitial) return this.load(true);
     if (!visibleBooks.length && this.data.nextCursor) return this.load(false);
   },
-  coverError(e) {
-    const books = this.data.books.map(b => b.bookId === e.currentTarget.dataset.id ? { ...b, coverUrl: '' } : b);
-    this.setData({ books, visibleBooks: visible(books, this.data.selectedType) });
-  },
   openBook(e) { navigate('/pages/book/book?bookId=' + encodeURIComponent(e.currentTarget.dataset.id)); },
   continueReading() {
     if (this.data.recent) navigate('/pages/book/book?bookId=' + encodeURIComponent(this.data.recent.bookId) + '&continue=1');

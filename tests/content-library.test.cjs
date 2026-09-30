@@ -27,7 +27,6 @@ test('类型、单位和音频状态来自元数据，兼容旧书籍且未知�
   assert.equal(present(item('x', 'future-type')).contentType, 'unknown');
   assert.equal(present({ ...item('x'), chapterAudioAvailableCount: 2 }).audioLabel, '部分全文音频可用');
   assert.match(present({ ...item('x'), contentScope: 'sample' }).metadata, /样本/);
-  assert.equal(present({ ...item('x'), coverUrl: 'http://unsafe.invalid/a.jpg' }).coverUrl, '');
 });
 
 test('筛选遍历后续分页，去重并保持真实空状态；切回全部保留已加载内容', async () => {
@@ -75,12 +74,10 @@ test('筛选扫描有界，仍有分页时不能误报最终空状态', async ()
   p.onUnload();
 });
 
-test('刷新失败保留内容，封面加载失败恢复同类型本地配图', async () => {
+test('刷新失败保留内容与文字封面', async () => {
   content.list = async () => ({ items: [{ ...item('blog', 'blog'), coverUrl: 'https://example.com/cover.jpg' }], nextCursor: null });
   const p = page(); p.onLoad(); await tick();
-  p.coverError({ currentTarget: { dataset: { id: 'blog' } } });
-  assert.equal(p.data.visibleBooks[0].coverUrl, '');
-  assert.equal(p.data.visibleBooks[0].coverArt, 'blog');
+  assert.equal(p.data.visibleBooks[0].coverTitle, 'blog');
   content.list = async () => { throw Error('offline'); };
   await p.retry();
   assert.equal(p.data.visibleBooks.length, 1);

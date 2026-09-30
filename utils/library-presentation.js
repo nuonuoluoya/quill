@@ -5,11 +5,11 @@ const TYPES = [
   { value: 'all', label: '全部' },
   { value: 'book', label: '书籍', unit: '章' },
   { value: 'podcast', label: '播客', unit: '期' },
-  { value: 'movie', label: '电影', unit: '段', art: 'movie' },
-  { value: 'tv', label: '电视剧', unit: '集', art: 'tv' }
+  { value: 'movie', label: '电影', unit: '段' },
+  { value: 'tv', label: '电视剧', unit: '集' }
 ];
 // Legacy blog content remains readable in All without adding a separate tab.
-const LEGACY_BLOG = { value: 'blog', label: '博客', unit: '篇', art: 'blog' };
+const LEGACY_BLOG = { value: 'blog', label: '博客', unit: '篇' };
 function typeOf(item) {
   const value = item.contentType || 'book';
   if (value === 'blog') return LEGACY_BLOG;
@@ -24,8 +24,7 @@ function present(item) {
   const complete = available > 0 && available === item.contentChapterCount;
   // Never promote sample access to complete content or invent audio availability.
   const audioLabel = complete ? '全文音频可用' : available > 0 ? '部分全文音频可用' : '全文音频暂不可用';
-  const coverUrl = typeof item.coverUrl === 'string' && /^(https:\/\/|\/imgs\/)/.test(item.coverUrl) ? item.coverUrl : '';
-  return { ...item, contentType: type.value, typeLabel: type.label, coverArt: type.art || '', coverUrl,
+  return { ...item, contentType: type.value, typeLabel: type.label,
     coverInitials: words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'PV',
     coverTitle: String(item.title || '').length <= 28 && String(item.title || '').trim().split(/\s+/).length <= 3 ? String(item.title || '').trim().replace(/\s+/g, '\n') : words.slice(0, 2).map(w => w[0]).join('').toUpperCase(),
     audioLabel, audioComplete: complete,

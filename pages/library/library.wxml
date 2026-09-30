@@ -29,10 +29,8 @@
     </view>
     <view class="library-list">
       <button size="default" wx:for="{{visibleBooks}}" wx:key="bookId" class="library-book" data-id="{{item.bookId}}" bindtap="openBook" hover-class="library-row-pressed" aria-label="{{item.title}}，{{item.typeLabel}}，进入内容目录">
-        <view class="library-cover {{item.coverArt?'is-photo':'is-book'}}" aria-hidden="true">
-          <image wx:if="{{item.coverUrl}}" class="library-cover-image" src="{{item.coverUrl}}" mode="aspectFill" data-id="{{item.bookId}}" binderror="coverError"/>
-          <image wx:elif="{{item.coverArt}}" class="library-cover-atlas art-{{item.coverArt}}" src="/imgs/covers/content-types.jpg" mode="scaleToFill"/>
-          <view wx:else class="library-cover-lettering"><text class="library-cover-title">{{item.coverTitle}}</text><view class="library-cover-rule"/></view>
+        <view class="library-cover is-book" aria-hidden="true">
+          <view class="library-cover-lettering"><text class="library-cover-title">{{item.coverTitle}}</text><view class="library-cover-rule"/></view>
         </view>
         <view class="library-book-copy">
           <view class="library-book-title">{{item.title}}</view>
