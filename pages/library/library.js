@@ -3,6 +3,7 @@ const { auth, onIdentityChange } = require('../../models/auth');
 const { progressStore } = require('../../models/progress');
 const { message, navigate } = require('../../utils/http');
 const { TYPES, present, visible, recentPosition } = require('../../utils/library-presentation');
+const { PREVIEW_BOOK_ID } = require('../../utils/guest-preview');
 
 Page({
   data: { books: [], visibleBooks: [], types: TYPES, selectedType: 'all', nextCursor: null, busy: false, error: '', recent: null, loggedIn: false },
@@ -24,14 +25,9 @@ Page({
   onPullDownRefresh() { this.load(true).finally(() => wx.stopPullDownRefresh()); },
   onReachBottom() { return this.loadMore(); },
   async load(reset = true) {
-    if (!auth.session) {
-      this.epoch++;
-      this.recentEpoch++;
-      this.setData({ books: [], visibleBooks: [], recent: null, nextCursor: null, busy: false, error: '', loggedIn: false });
-      return;
-    }
     if (this.data.busy) return;
     const op = ++this.epoch;
+    const audience = auth.session ? 'member' : 'sample';
     const { selectedType } = this.data;
     let cursor = reset ? undefined : this.data.nextCursor;
     this.setData({ busy: true, error: '' });
@@ -41,14 +37,16 @@ Page({
       // The existing API paginates all types. Scan bounded batches so a type
       // absent from the first page is not incorrectly reported as empty.
       for (let page = 0; page < 5; page++) {
-        const r = selectedType === 'podcast' ? await content.list('member', cursor, 'podcast') : await content.list('member', cursor);
+        const r = audience === 'member' && selectedType === 'podcast' ? await content.list(audience, cursor, 'podcast') : await content.list(audience, cursor);
         if (!this.alive || op !== this.epoch) return;
-        r.items.forEach(b => byId.set(b.bookId, present(b)));
+        const items = audience === 'sample' ? r.items.filter(b => b.bookId === PREVIEW_BOOK_ID && b.visibility === 'sample-public') : r.items;
+        items.forEach(b => byId.set(b.bookId, present(b)));
         const books = [...byId.values()];
-        const addedMatches = visible(r.items.map(present), selectedType).length;
+        const addedMatches = visible(items.map(present), selectedType).length;
         if (r.nextCursor && (r.nextCursor === cursor || seen.has(r.nextCursor))) throw Error('分页暂时不可用，请下拉刷新');
-        this.setData({ books, visibleBooks: visible(books, selectedType), nextCursor: r.nextCursor });
-        if (!r.nextCursor || addedMatches || selectedType === 'all' || selectedType === 'podcast') break;
+        this.setData({ books, visibleBooks: visible(books, selectedType), nextCursor: audience === 'sample' && books.length ? null : r.nextCursor });
+        if (audience === 'sample' && !r.nextCursor && !books.length) throw Error('第一章预览暂不可用，请稍后重试');
+        if (!r.nextCursor || (audience === 'sample' ? books.length : addedMatches || selectedType === 'all' || selectedType === 'podcast')) break;
         seen.add(r.nextCursor);
         cursor = r.nextCursor;
       }
@@ -61,13 +59,13 @@ Page({
   },
   async loadRecent() {
     const op = ++this.recentEpoch;
-    if (!auth.session) { this.setData({ recent: null }); return; }
     const id = progressStore.recent();
     if (!id) { this.setData({ recent: null }); return; }
+    if (!auth.session && id !== PREVIEW_BOOK_ID) { this.setData({ recent: null }); return; }
     try {
       const b = await content.book(id);
       if (!this.alive || op !== this.recentEpoch) return;
-      if (b.visibility !== 'private') { this.setData({ recent: null }); return; }
+      if (b.visibility !== (auth.session ? 'private' : 'sample-public')) { this.setData({ recent: null }); return; }
       const p = progressStore.get(b).state.progress;
       this.setData({ recent: p ? { ...b, position: recentPosition(b, p, progressStore.position(b, p)) } : null });
     } catch (_) {

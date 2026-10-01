@@ -1,11 +1,11 @@
 <q-nav title="Pidan Vocal" back/>
-<view class="page book-page">
+<view class="page book-page {{book.previewOfBookId?'is-preview':''}}">
   <navigator url="/pages/settings/settings" class="book-settings" hover-class="pressed">我的与设置<q-icon name="arrow-right" size="16" color="muted"/></navigator>
   <view wx:if="{{error}}" class="empty error">{{error}}<button size="default" class="action outline" bindtap="load">重试</button></view>
   <view wx:elif="{{!book}}" class="empty">正在加载章节目录…</view>
   <block wx:if="{{book}}">
     <view class="title">{{book.title}}</view>
-    <text class="muted book-meta">{{isPodcast?'播客节目':book.contentScope==='sample'?'样本内容':'完整内容'}} · {{catalogSummary}} · {{book.language==='en'?'英文':book.language}}</text>
+    <text class="muted book-meta">{{book.previewOfBookId?'第一章免登录听读':isPodcast?'播客节目':book.contentScope==='sample'?'样本内容':'完整内容'}} · {{book.previewOfBookId?'共 '+(book.chapters.length+book.lockedChapters.length)+' 章 · 1 章开放':catalogSummary}} · {{book.language==='en'?'英文':book.language}}</text>
     <view wx:if="{{position}}" class="card">
       <text class="label">上次读到</text><view class="book-position serif">{{position}}</view>
       <button size="default" class="action primary" bindtap="continueReading" hover-class="pressed">继续学习</button>
@@ -17,6 +17,9 @@
     </picker>
     <button size="default" wx:for="{{chapters}}" wx:key="id" class="chapter-row" data-id="{{item.id}}" bindtap="openChapter" hover-class="row-pressed">
       <text class="chapter-no {{isTv?'episode-no':''}}">{{item.number}}{{isTv?'集':''}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">{{item.sentenceCount}} 句 · {{item.sentenceCount===item.playableCount?'全部可播放':item.playableCount+' 句可播放'}}</text></view><q-icon name="arrow-right" size="18" color="muted"/>
+    </button>
+    <button size="default" wx:for="{{book.lockedChapters}}" wx:key="id" class="chapter-row locked-chapter" data-id="{{item.id}}" bindtap="openChapter" hover-class="row-pressed" aria-label="第{{item.number}}章，{{item.title}}，已上锁，登录后阅读">
+      <text class="chapter-no">{{item.number<10?'0':''}}{{item.number}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">登录后阅读</text></view><view class="chapter-lock" aria-hidden="true"/>
     </button>
     <view wx:if="{{!isPodcast && !chapters.length}}" class="empty">{{isTv?'暂无剧集':'本书暂无章节'}}</view>
     <view class="book-status"><q-icon name="cloud" color="muted" size="20"/><text>{{status}}</text></view>

@@ -5,6 +5,7 @@ const { subscribe } = require('../../utils/events');
 const { onIdentityChange } = require('../../models/auth');
 const { navigate, message } = require('../../utils/http');
 const { catalog, seasonIdAt } = require('../../utils/catalog');
+const { lockedChapterLogin } = require('../../utils/guest-preview');
 Page({
     data: { book: null, chapters: [], isPodcast: false, podcastChapterId: '', seasons: [], selectedSeasonId: '', seasonIndex: 0, unitLabel: '章', catalogLabel: '章节', catalogSummary: '', busy: true, error: '', position: '', status: '', totals: [0, 0] },
     onLoad(q) { this.id = q.bookId || ''; this.continueRequested = q.continue === '1'; this.alive = true; this.epoch = 0; this.seasonChoice = ''; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; this.seasonChoice = ''; this.setData({ book: null, chapters: [], seasons: [], selectedSeasonId: '', position: '' }); this.load(); }); this.load(); },
@@ -17,7 +18,6 @@ Page({
         const b = await content.book(this.id);
         if (!this.alive || op !== this.epoch)
             return;
-        if (b.visibility === 'sample-public') throw Error('体验样本已下线，请返回内容库');
         selectedBook.value = b;
         const local = progressStore.get(b).state.progress;
         this.setData({ book: b, podcastChapterId: local ? local.chapterId : '', ...catalog(b, this.seasonChoice, local && local.chapterId), totals: b.chapters.reduce((a, c) => [a[0] + c.sentenceCount, a[1] + c.playableCount], [0, 0]) });
@@ -43,7 +43,13 @@ Page({
     changeSeason(e) { const id = seasonIdAt(this.data.seasons, e.detail.value); if (!id || !this.data.book) return; this.seasonChoice = id; this.setData(catalog(this.data.book, id)); },
     open(id, sentence) { const b = this.data.book; if (!b || !b.chapters.some(c => c.id === id))
         return; navigate('/pages/reader/reader?bookId=' + encodeURIComponent(b.bookId) + '&buildId=' + encodeURIComponent(b.buildId) + '&chapterId=' + encodeURIComponent(id) + (sentence ? '&sentenceId=' + encodeURIComponent(sentence) : '')); },
-    openChapter(e) { this.open(e.currentTarget.dataset.id); },
+    openChapter(e) { const id = e.currentTarget.dataset.id, loginUrl = lockedChapterLogin(this.data.book, id);
+        if (loginUrl) {
+            navigate(loginUrl);
+            return;
+        }
+        this.open(id);
+    },
     openPart(e) { this.open(e.detail.chapterId); },
     continueReading() { const b = this.data.book; if (!b)
         return; const r = progressStore.get(b); if (r.state.conflict && !r.state.deferred)

@@ -6,7 +6,8 @@ const { selectedBook } = require('../../models/context');
 const { defaultSpeed } = require('../../models/preferences');
 const { searchSentences, playable } = require('../../utils/contracts');
 const { subscribe } = require('../../utils/events');
-const { message } = require('../../utils/http');
+const { message, navigate } = require('../../utils/http');
+const { lockedChapterLogin } = require('../../utils/guest-preview');
 const { catalog, unitTitle, seasonIdAt } = require('../../utils/catalog');
 const { episodeFor } = require('../../utils/podcast');
 Page({
@@ -35,7 +36,6 @@ Page({
         return; progressStore.update(b, { bookId: b.bookId, textRevision: b.textRevision, sourceBuildId: b.buildId, chapterId: c.chapterId, sentenceId: s.id, preferredSpeed: playerState.speed, updatedAt: new Date().toISOString() }, s.index); },
     async load(newest = false) { const op = ++this.epoch; player.dispose(); this.limit = 40; this.renderKey = ''; this.setData({ busy: true, error: '', notice: '', query: '', chapter: null, rows: [] }); try {
         const b = this.buildId && !newest ? await api('/books/' + encodeURIComponent(this.bookId) + '/builds/' + encodeURIComponent(this.buildId)).then(checkBook) : await content.book(this.bookId);
-        if (b.visibility === 'sample-public') throw Error('体验样本已下线，请返回内容库');
         const id = b.chapters.some(c => c.id === this.chapterId) ? this.chapterId : (b.chapters.find(c => c.sentenceCount > 0) || b.chapters[0] || {}).id;
         if (!id)
             throw Error('本书暂无章节');
@@ -109,7 +109,7 @@ Page({
     changeSeason(e) { const id = seasonIdAt(this.data.seasons, e.detail.value); if (!id || !this.data.book) return; const { chapters: chapterOptions, ...navigation } = catalog(this.data.book, id); this.setData({ ...navigation, chapterOptions }); },
     hideChapters() { this.setData({ sheet: false }); },
     choosePart(e) { return this.chooseChapter({ currentTarget: { dataset: { id: e.detail.chapterId } } }); },
-    async chooseChapter(e) { const id = e.currentTarget.dataset.id; if (!this.data.book || !this.data.book.chapters.some(c => c.id === id)) return; this.setData({ sheet: false }); if (this.data.chapter && this.data.chapter.chapterId === id) return; this.chapterId = id; this.sentenceId = ''; const op = this.epoch + 1; await this.load(); if (this.alive && this.epoch === op && this.data.chapter && this.data.chapter.chapterId === id)
+    async chooseChapter(e) { const id = e.currentTarget.dataset.id; const loginUrl = lockedChapterLogin(this.data.book, id); if (loginUrl) { this.setData({ sheet: false }); navigate(loginUrl); return; } if (!this.data.book || !this.data.book.chapters.some(c => c.id === id)) return; this.setData({ sheet: false }); if (this.data.chapter && this.data.chapter.chapterId === id) return; this.chapterId = id; this.sentenceId = ''; const op = this.epoch + 1; await this.load(); if (this.alive && this.epoch === op && this.data.chapter && this.data.chapter.chapterId === id)
         this.save(); },
     fullPlay() { if (!this.data.frozen)
         player.chapterPlay(); },

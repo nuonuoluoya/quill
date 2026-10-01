@@ -8,11 +8,9 @@
       </navigator>
     </view>
     <view wx:if="{{!loggedIn}}" class="library-login">
-      <view class="section-title">登录后查看你的内容</view>
-      <view class="muted small">查看已授权的书籍和剧集，继续上次的学习。</view>
-      <button size="default" class="action primary" bindtap="signIn" hover-class="library-primary-pressed">去登录</button>
+      <view class="section-title">先读一章，再开始</view>
+      <view class="muted small">Harry Potter 第一部第一章可免登录听读，学习位置保存在本机。</view>
     </view>
-    <block wx:else>
     <view wx:if="{{recent}}" class="library-recent">
       <text class="library-recent-label">最近学习</text>
       <view class="library-recent-title">{{recent.title}}</view>
@@ -43,6 +41,5 @@
     <view wx:if="{{busy}}" class="library-empty" role="status">正在加载内容…</view>
     <view wx:if="{{!busy && visibleBooks.length === 0 && !error}}" class="library-empty">{{nextCursor?'已加载内容中暂无此类型，请继续加载':selectedType!=='all'?'暂无此类型的内容':'暂时没有可学习的内容'}}</view>
     <button size="default" wx:if="{{nextCursor}}" class="library-more" disabled="{{busy}}" bindtap="loadMore" hover-class="library-pressed"><text>加载更多</text><q-icon name="chevron-down" color="muted" size="19"/></button>
-    </block>
   </view>
 </view>

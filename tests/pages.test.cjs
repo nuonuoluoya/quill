@@ -21,7 +21,7 @@ test('目录：内容加载与继续阅读传递精确章节位置', async () =>
 test('阅读：不自动播放，搜索保留索引，倍速/切章/后台生命周期', async () => { content.book = async () => book; content.chapter = async () => chapter; content.snapshot = async () => book; const p = page('reader'); p.onLoad({ bookId: 'b', chapterId: 'c' }); p.onShow(); await tick(); assert.equal(p.data.rows.length, 3); assert.equal(playerState.status, 'selected'); p.search({ detail: { value: 'LANTERN' } }); assert.equal(p.data.rows[0].index, 3); assert.equal(p.data.hiddenCurrent, true); p.locate(); await tick(); assert.equal(p.data.rows.length, 3); assert.equal(p.data.target, 'sentence-0'); p.click({ currentTarget: { dataset: { index: 2 } } }); assert.equal(playerState.index, 1); assert.equal(playerState.status, 'unavailable'); assert.equal(progressStore.get(book).state.progress.sentenceId, 's2'); p.onHide(); assert.equal(playerState.loop, false); p.onUnload(); });
 test('阅读：页面卸载后迟到内容不会更新页面或启动播放器', async () => { let resolve; content.book = () => new Promise(r => resolve = r); content.chapter = async () => chapter; const p = page('reader'); p.onLoad({ bookId: 'b' }); p.onUnload(); resolve(book); await tick(); assert.equal(p.data.chapter, null); assert.equal(playerState.status, 'selected'); });
 test('设置：同意隐私默认未勾选，未同意不请求登录，游客修改倍速独立存储', async () => { const p = page('settings'); selectedBook.value = null; p.onLoad(); p.onShow(); assert.equal(p.data.consent, false); await p.signIn(); assert.equal(auth.session, null); p.setSpeed({ currentTarget: { dataset: { value: 1.25 } } }); assert.equal(p.data.speed, 1.25); assert.equal(cache.get(`pidan:${require('../utils/http').environment}:guest:speed`), 1.25); p.onUnload(); });
-test('旧公开样本目录和带版本正文链接均被拦截，不加载正文或启动播放', async () => {
+test('公开内容目录和固定版本正文可供游客阅读，但不会自动登录或播放', async () => {
     const sample = { ...book, visibility: 'sample-public', contentScope: 'sample' };
     content.book = async () => sample;
     const authModule = require('../models/auth'), originalApi = authModule.api;
@@ -31,10 +31,13 @@ test('旧公开样本目录和带版本正文链接均被拦截，不加载正�
     try {
         for (const [name, query] of [['book', { bookId: 'b' }], ['reader', { bookId: 'b' }], ['reader', { bookId: 'b', buildId: 'build' }]]) {
             const p = page(name); p.onLoad(query); await tick();
-            assert.match(p.data.error, /体验样本已下线/);
-            assert.equal(p.data.book, null);
+            assert.equal(p.data.error, '');
+            assert.equal(p.data.book.bookId, sample.bookId);
+            if (name === 'reader') assert.equal(p.data.rows.length, 3);
+            assert.equal(auth.session, null);
+            assert.notEqual(playerState.status, 'playing');
             p.onUnload();
         }
-        assert.equal(chapterRequests, 0);
+        assert.equal(chapterRequests, 2);
     } finally { authModule.api = originalApi; }
 });

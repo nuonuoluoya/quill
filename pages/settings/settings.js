@@ -7,17 +7,36 @@ const { player } = require('../../models/player');
 const { speeds } = require('../../utils/contracts');
 const { subscribe, emit } = require('../../utils/events');
 const { environment, storage, confirm, message, toLibrary } = require('../../utils/http');
+const { FULL_BOOK_ID } = require('../../utils/guest-preview');
 Page({
-    data: { loggedIn: false, consent: false, busy: false, error: '', book: null, position: '', status: '', speed: 1, speeds },
-    onLoad() { this.alive = true; this.off = subscribe(() => this.refresh()); },
-    onShow() { this.refresh(); },
+    data: { loggedIn: false, consent: false, busy: false, error: '', book: null, position: '', status: '', speed: 1, speeds, hasReturnChapter: false },
+    onLoad(q = {}) { this.alive = true; this.returnChapterId = q.returnBookId === FULL_BOOK_ID && typeof q.returnChapterId === 'string' ? q.returnChapterId : ''; this.setData({ hasReturnChapter: !!this.returnChapterId }); this.off = subscribe(() => this.refresh()); },
+    onShow() { this.refresh(); if (auth.session && this.returnChapterId && !this.returnAttempted) { this.returnAttempted = true; this.resumeRequested(); } },
     onUnload() { this.alive = false; this.off(); },
     refresh() { if (!this.alive)
         return; const b = selectedBook.value, p = b ? progressStore.get(b).state.progress : null; this.setData({ loggedIn: !!auth.session, book: b, position: p ? progressStore.position(b, p) : '尚未开始阅读', status: b ? progressStore.status(b) : '', speed: p ? p.preferredSpeed : defaultSpeed(), authError: auth.error }); },
     consent(e) { this.setData({ consent: e.detail.value.includes('agree') }); },
+    experience() { this.returnChapterId = ''; toLibrary(); },
+    async openRequestedChapter() {
+        const id = this.returnChapterId;
+        if (!id || !auth.session) return;
+        const b = await content.book(FULL_BOOK_ID);
+        if (!this.alive || this.returnChapterId !== id) return;
+        if (!b.chapters.some(c => c.id === id)) throw Error('所选章节已不可用，请返回内容库刷新');
+        wx.redirectTo({ url: '/pages/reader/reader?bookId=' + encodeURIComponent(b.bookId) + '&buildId=' + encodeURIComponent(b.buildId) + '&chapterId=' + encodeURIComponent(id) });
+    },
+    async resumeRequested() {
+        if (this.data.busy) return;
+        this.setData({ busy: true, error: '' });
+        try { await this.openRequestedChapter(); }
+        catch (e) { if (this.alive) this.setData({ error: message(e) }); }
+        finally { if (this.alive) this.setData({ busy: false }); }
+    },
     async signIn() { if (!this.data.consent || this.data.busy)
         return; const oldBook = selectedBook.value, guest = oldBook && identity() === 'guest' ? progressStore.get(oldBook).state.progress : null; this.setData({ busy: true, error: '' }); try {
         await login();
+        if (!this.alive) return;
+        if (this.returnChapterId) { await this.openRequestedChapter(); return; }
         if (oldBook) {
             const b = await content.book(oldBook.bookId);
             selectedBook.value = b;

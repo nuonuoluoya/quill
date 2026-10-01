@@ -6,6 +6,7 @@ exports.checkChapter = checkChapter;
 const auth_1 = require("./auth");
 const http_1 = require("../utils/http");
 const { validPodcast } = require('../utils/podcast');
+const { validPreview } = require('../utils/guest-preview');
 const enc = encodeURIComponent, chapterCache = new Map();
 async function read(path) {
     try {
@@ -44,6 +45,7 @@ function checkBook(b) {
         ids.add(c.id);
     }
     if (b.contentType === 'podcast' && !validPodcast(b)) invalid();
+    if (!validPreview(b)) invalid();
     return b;
 }
 function checkChapter(c, b) {

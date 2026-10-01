@@ -26,6 +26,7 @@
       <view class="season-select"><view class="season-select-copy"><text class="season-select-title">{{selectedSeasonTitle}}</text><text class="season-select-count">{{chapterOptions.length}} 集</text></view><view class="season-select-action">切换季<q-icon name="chevron-down" color="green" size="18"/></view></view>
     </picker>
     <button size="default" wx:for="{{chapterOptions}}" wx:key="id" class="chapter-row" data-id="{{item.id}}" bindtap="chooseChapter"><text class="chapter-no {{isTv?'episode-no':''}}">{{item.number}}{{isTv?'集':''}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">{{item.sentenceCount}} 句 · {{item.sentenceCount===item.playableCount?'全部可播放':item.playableCount+' 句可播放'}}</text></view><text wx:if="{{item.id===chapter.chapterId}}" class="badge">{{isTv?'当前集':'当前章节'}}</text><q-icon wx:else name="arrow-right" color="muted" size="18"/></button>
+    <button size="default" wx:for="{{book.lockedChapters}}" wx:key="id" class="chapter-row locked-chapter" data-id="{{item.id}}" bindtap="chooseChapter" aria-label="第{{item.number}}章，{{item.title}}，已上锁，登录后阅读"><text class="chapter-no">{{item.number<10?'0':''}}{{item.number}}</text><view class="grow"><view class="chapter-title">{{item.title}}</view><text class="muted small">登录后阅读</text></view><view class="chapter-lock" aria-hidden="true"/></button>
     <view class="sheet-hint">{{isPodcast?'选择其他部分会停止当前播放':isTv?'选择其他集会停止当前播放':'切换章节会停止当前播放'}}</view>
   </q-sheet>
   <q-conflict wx:if="{{book}}" book="{{book}}" bindresolved="resolved"/>

@@ -2,16 +2,18 @@
 <view class="page settings-page {{loggedIn?'':'guest-page'}}">
   <block wx:if="{{!loggedIn}}">
     <view class="guest-mark"><q-icon name="book-audio" color="green" size="72"/></view>
-    <view class="title guest-title">把阅读位置带到<view>下一台设备</view></view>
-    <view class="guest-intro muted">登录后查看你的内容，并同步学习进度。</view>
+    <view class="title guest-title">{{hasReturnChapter?'登录后继续阅读':'把阅读位置带到'}}<view wx:if="{{!hasReturnChapter}}">下一台设备</view></view>
+    <view class="guest-intro muted">{{hasReturnChapter?'新用户登录后可阅读第一部完整内容；也可以继续体验第一章。':'体验听读无需登录；登录后可同步学习进度。'}}</view>
     <view class="benefits"><view><q-icon name="check" color="white" size="17"/><text>保存章节与句子位置</text></view><view><q-icon name="check" color="white" size="17"/><text>同步常用倍速</text></view><view><q-icon name="check" color="white" size="17"/><text>继续上次的阅读</text></view></view>
     <view class="consent-row"><checkbox-group bindchange="consent"><label class="consent"><checkbox value="agree" checked="{{consent}}" color="#244F3E"/><text>我已阅读并了解</text></label></checkbox-group><navigator url="/pages/privacy/privacy" class="privacy-link">隐私说明</navigator></view>
-    <button size="default" class="action primary login-button" disabled="{{!consent || busy}}" loading="{{busy}}" bindtap="signIn">微信登录</button>
+    <button size="default" class="action primary login-button" disabled="{{!consent || busy}}" loading="{{busy}}" bindtap="signIn">微信注册 / 登录</button>
+    <button size="default" class="action outline" bindtap="experience">先体验听读</button>
     <view class="guest-footer muted">无需提供手机号或头像</view>
   </block>
   <block wx:else>
     <view class="title settings-title">安心听，<view>随时继续。</view></view>
     <view class="account-row"><view class="avatar"><q-icon name="user" size="32"/></view><view><view>微信账号已登录</view><text class="muted small">阅读位置可在设备间同步</text></view></view>
+    <button wx:if="{{hasReturnChapter}}" size="default" class="action primary" bindtap="resumeRequested" disabled="{{busy}}">继续阅读所选章节</button>
     <view class="setting"><view class="section-title">播放偏好</view><view class="muted preference-label">默认倍速</view><view class="choices"><button size="default" wx:for="{{speeds}}" wx:key="*this" class="choice {{speed===item?'active':''}}" data-value="{{item}}" bindtap="setSpeed">{{item}}×</button></view></view>
     <view class="setting"><view class="section-title">阅读进度</view><view wx:if="{{book}}" class="sync-row"><q-icon name="cloud" size="33"/><view class="grow"><view>{{status}}</view><view class="small muted">{{position}}</view></view><button size="default" class="sync-button" disabled="{{busy}}" bindtap="sync">立即同步</button></view><view wx:else class="muted small no-progress">从书架选择一本书后，在这里管理进度。</view></view>
     <navigator url="/pages/privacy/privacy" class="settings-link" hover-class="row-pressed"><text>隐私说明</text><q-icon name="arrow-right" color="muted" size="19"/></navigator>
