@@ -5,6 +5,7 @@
   "description": "原生微信小程序，无运行时框架和构建依赖",
   "scripts": {
     "check": "node scripts/check.cjs",
+    "check:release": "node scripts/check-release.cjs",
     "test": "node --test tests/*.test.cjs",
     "build": "node scripts/check.cjs",
     "build:mp-weixin": "node scripts/check.cjs",

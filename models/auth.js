@@ -8,6 +8,7 @@ exports.api = api;
 exports.logout = logout;
 const events_1 = require("../utils/events");
 const http_1 = require("../utils/http");
+const { loginFailure } = require('../utils/login-error');
 const key = `pidan:${http_1.environment}:session`;
 let saved = null;
 try {
@@ -40,8 +41,13 @@ async function login() {
         let code = '';
         // #ifdef MP-WEIXIN
         code = await new Promise((resolve, reject) => wx.login({
+            timeout: 10000,
             success: (r) => resolve(r.code),
-            fail: () => reject(new http_1.ApiError('LOGIN_FAILED', '微信登录失败，请重试')),
+            fail: (error) => {
+                const failure = loginFailure(error);
+                console.warn('微信取码失败', failure.diagnostic);
+                reject(new http_1.ApiError(failure.code, failure.message));
+            },
         }));
         // #endif
         if (!code)
