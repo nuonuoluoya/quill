@@ -1,9 +1,9 @@
 <view class="reader">
   <q-nav title="{{chapterLabel}}" back/>
   <view class="reader-top">
-    <view class="reader-heading"><view class="reader-title serif">{{title}}</view><button size="default" class="chapter-button" bindtap="showChapters">{{catalogLabel}}<q-icon name="arrow-right" size="15"/></button></view>
+    <view class="reader-heading"><view class="reader-title serif">{{title}}</view><button size="default" class="chapter-button" bindtap="showChapters"><view class="pill-border" aria-hidden="true"/>{{catalogLabel}}<q-icon name="arrow-forward" size="20"/></button></view>
     <view class="search"><q-icon name="search" size="19" color="muted"/><input value="{{query}}" bindinput="search" placeholder="{{isPodcast?'搜索当前部分':isTv?'搜索本集':'搜索本章'}}" confirm-type="search" maxlength="120"/></view>
-    <view class="reader-mode"><text class="muted">{{chapterMode?'正在全文播放':isPodcast?'逐句学习':book.contentScope==='sample'?'样本内容':'完整内容'}}</text><button size="default" wx:if="{{chapter && !chapterMode}}" class="full-play" disabled="{{frozen || chapter.chapterAudio.status!=='available'}}" bindtap="fullPlay"><q-icon name="play" color="green" size="14"/><text>{{chapter.chapterAudio.status==='available'?'全文播放':isPodcast?'暂无整段音频':'暂无整章音频'}}</text></button></view>
+    <view class="reader-mode"><text class="content-label">{{chapterMode?'正在全文播放':isPodcast?'逐句学习':book.contentScope==='sample'?'样本内容':'完整内容'}}</text><button size="default" wx:if="{{chapter && !chapterMode}}" class="full-play" disabled="{{frozen || chapter.chapterAudio.status!=='available'}}" bindtap="fullPlay"><q-icon name="play-outline" size="20"/><text>{{chapter.chapterAudio.status==='available'?'全文播放':isPodcast?'暂无整段音频':'暂无整章音频'}}</text></button></view>
     <button size="default" wx:if="{{updated}}" class="notice" bindtap="updateContent">本书有新版本 · 点击更新</button>
     <view wx:if="{{offline || notice}}" class="notice"><q-icon name="warning" color="muted" size="19"/><text>{{offline?'网络已断开 · 进度已保存在本机':notice}}</text></view>
     <button size="default" wx:if="{{hiddenCurrent}}" class="quiet small" bindtap="locate">当前句子不在搜索结果中 · 定位原文</button>
@@ -12,7 +12,7 @@
     <view wx:if="{{error}}" class="empty error">{{error}}<button size="default" class="action outline" bindtap="retry">重试</button></view><view wx:elif="{{busy}}" class="empty">正在加载原文…</view>
     <block wx:else>
       <view wx:for="{{rows}}" wx:key="id" id="sentence-{{item.index-1}}" class="sentence {{item.selected?'selected':''}}" data-index="{{item.index}}" bindtap="click" role="button" aria-label="第 {{item.number}} 句，{{item.available?'播放':'暂无音频'}}">
-        <text class="sentence-no">{{item.number}}</text><view class="sentence-play"><q-icon wx:if="{{item.available}}" name="{{item.selected && item.playing?'pause':'play'}}" color="{{item.selected?'green':'ink'}}" size="16"/><text wx:else class="muted">—</text></view>
+        <text class="sentence-no">{{item.number}}</text><view class="sentence-play {{item.available?'':'no-audio'}}"><q-icon wx:if="{{item.available}}" name="{{item.selected && item.playing?'pause':'play'}}" color="{{item.selected?'white':'ink'}}" size="15"/><text wx:else class="muted">—</text></view>
         <view class="grow"><text class="sentence-text">{{item.text}}</text><view wx:if="{{!item.available}}" class="unavailable">{{item.alignment.status==='needs_review'?'待复核 · 暂无逐句音频':'暂无逐句音频'}}</view></view>
       </view>
       <view wx:if="{{!rows.length}}" class="empty">{{query?'没有找到匹配的句子':isPodcast?'当前部分暂无正文':'本章暂无正文'}}</view><button size="default" wx:if="{{more}}" class="action quiet" bindtap="more">加载更多句子</button>

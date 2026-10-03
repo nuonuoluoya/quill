@@ -1,4 +1,32 @@
 @import '../../wxss/catalog.wxss';
-.reader{height:100vh;display:flex;flex-direction:column;overflow:hidden}.reader q-nav,.reader q-player-dock{flex-shrink:0}.reader-top{padding:16px 18px 0;flex-shrink:0}.reader-heading{display:flex;align-items:center;gap:14px;justify-content:space-between;margin:0 0 18px}.reader-title{font-size:43px;line-height:1.12;letter-spacing:-1px;min-width:0;overflow-wrap:break-word}.chapter-button,button[size="default"].chapter-button{display:flex;align-items:center;gap:4px;border:1px solid #D4D7D1;border-radius:20px;padding:6px 12px;font-size:13px;white-space:nowrap;flex-shrink:0}.search{padding:10px 14px;display:flex;align-items:center;gap:10px;background:#EEEDE8;border-radius:15px}.search input{flex:1;font-size:15px;min-width:0;line-height:22px;height:22px}.reader-mode{display:flex;align-items:center;justify-content:space-between;min-height:64px;font-size:14px;gap:12px;border-bottom:1px solid #DCDDD8}.full-play,button[size="default"].full-play{display:flex;align-items:center;gap:6px;border:1px solid #608177;border-radius:9px;padding:7px 12px;font-size:13px;white-space:nowrap}.sentences{flex:1;min-height:0;height:0}.sentence{display:flex;align-items:flex-start;gap:22px;padding:20px 14px;margin:0 5px;position:relative;min-height:72px}.sentence::after{content:"";position:absolute;bottom:0;left:13px;right:13px;height:1px;background:#DCDDD8}.sentence.selected{background:#E8EEE7;border-radius:10px}.sentence.selected::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:4px;background:#2C624D;border-radius:3px}.sentence.selected::after{display:none}.sentence-no{font-family:"Times New Roman",serif;font-size:14px;color:#687078;line-height:1.6;min-width:31px;margin-top:3px}.sentence-play{width:20px;flex-shrink:0;padding-top:4px}.sentence-text{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:21px;line-height:1.35}.unavailable{color:#AA7C3F;font-size:13px;margin-top:8px}.sheet-book{font-size:15px;padding-bottom:22px;border-bottom:1px solid #DCDDD8}.sheet-hint{font-size:12px;text-align:center;color:#818786;margin:26px 0 8px}.reader-top .notice,.reader-top button[size="default"].notice{margin:0 0 10px}.reader-top .quiet,.reader-top button[size="default"].quiet{padding:8px 0}
-
-.reader-top{padding-top:26px}.reader-title{font-size:48px}
+.reader{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.reader q-nav,.reader q-player-dock{flex-shrink:0}
+.reader-top{padding:10px 18px 0;flex-shrink:0}
+.reader-heading{display:flex;align-items:flex-end;gap:24px;justify-content:space-between;margin:0 0 10px}
+.reader-title{flex:1;min-width:0;max-width:230px;font-size:44px;font-weight:600;line-height:1.02;letter-spacing:-1.3px;overflow-wrap:break-word}
+.chapter-button,button[size="default"].chapter-button{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:24px;min-width:86px;min-height:44px;padding:4px 12px;font-size:15px;white-space:nowrap;flex-shrink:0;margin-bottom:4px}
+.chapter-button .pill-border{position:absolute;top:5px;bottom:5px;left:0;right:0;border:1px solid #C9CECA;border-radius:24px;pointer-events:none}
+.search{height:42px;padding:9px 14px;display:flex;align-items:center;gap:12px;background:#EEEDEB;border-radius:9px}
+.search input{flex:1;font-size:16px;min-width:0;line-height:24px;height:24px}
+.reader-mode{display:flex;align-items:center;justify-content:space-between;min-height:66px;gap:12px;border-bottom:1px solid #DCDDD8}
+.content-label{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:19px;font-weight:600}
+.full-play,button[size="default"].full-play{display:flex;align-items:center;gap:7px;border:1px solid #C9CECA;border-radius:8px;min-height:36px;padding:5px 12px;font-size:15px;color:#687078;white-space:nowrap}
+.full-play[disabled],button[size="default"].full-play[disabled]{opacity:.65}
+.sentences{flex:1;min-height:0;height:0}
+.sentence{display:flex;align-items:flex-start;gap:20px;padding:14px 8px;margin:0 10px;position:relative;min-height:75px}
+.sentence::after{content:"";position:absolute;bottom:0;left:8px;right:8px;height:1px;background:#DCDDD8}
+.sentence.selected{background:#E8EEE7;border-radius:8px}
+.sentence.selected::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#244F3E;border-radius:4px 0 0 4px}
+.sentence.selected::after{display:none}
+.sentence-no{font-family:"Times New Roman",serif;font-size:18px;color:#687078;line-height:28px;width:29px;flex-shrink:0;margin-top:1px}
+.sentence-play{display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;border:1px solid #687078;border-radius:50%;margin-top:3px}
+.sentence.selected .sentence-no{color:#101A1C}
+.sentence.selected .sentence-play{background:#244F3E;border-color:#244F3E}
+.sentence-play.no-audio,.sentence.selected .sentence-play.no-audio{background:transparent;border-color:transparent}
+.sentence-text{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:20px;line-height:1.15}
+.unavailable{color:#AA7C3F;font-size:13px;margin-top:8px}
+.sheet-book{font-size:15px;padding-bottom:22px;border-bottom:1px solid #DCDDD8}
+.sheet-hint{font-size:12px;text-align:center;color:#818786;margin:26px 0 8px}
+.reader-top .notice,.reader-top button[size="default"].notice{margin:0 0 10px}
+.reader-top .quiet,.reader-top button[size="default"].quiet{padding:8px 0}
+@media(max-width:360px){.reader-top{padding-left:16px;padding-right:16px}.reader-heading{gap:14px}.reader-title{font-size:39px;letter-spacing:-1px}.chapter-button,button[size="default"].chapter-button{min-width:78px;padding:4px 9px}.sentence{gap:14px}.sentence-no{width:27px}.reader-mode{gap:8px}.full-play,button[size="default"].full-play{padding-left:8px;padding-right:8px;font-size:14px}}

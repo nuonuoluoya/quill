@@ -13,7 +13,7 @@ Component({
         hide() { this.visible = false; this.clearLoading(); }
     },
     methods: {
-        refresh() { const s = playerState; this.setData({ state: { ...s }, percent: s.duration ? Math.min(100, s.currentTime / s.duration * 100) : 0, current: timeLabel(s.currentTime), duration: timeLabel(s.duration), number: String(s.index + 1).padStart(3, '0'), total: String((this.properties.chapter.sentences || []).length).padStart(3, '0') }); this.updateLoading(s); },
+        refresh() { const s = playerState; this.setData({ state: { ...s }, percent: s.duration ? Math.min(100, s.currentTime / s.duration * 100) : 0, current: timeLabel(s.currentTime), duration: timeLabel(s.duration), number: String(s.index + 1), total: String((this.properties.chapter.sentences || []).length) }); this.updateLoading(s); },
         updateLoading(s) {
             const waiting = !s.error && (s.status === 'loading' || (s.status === 'playing' && s.buffering));
             if (!this.alive || !this.visible || !waiting) { this.clearLoading(); return; }

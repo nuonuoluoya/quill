@@ -53,7 +53,7 @@ Page({
         index = Math.max(0, index);
         const { chapters: chapterOptions, ...navigation } = catalog(b, '', id);
         const episode = b.contentType === 'podcast' ? episodeFor(b, id) : null;
-        this.setData({ ...navigation, chapterLabel: unitTitle(b, id), chapterOptions, book: b, chapter: c, title: episode ? episode.title : b.chapters.find(x => x.id === id).title, updated: false, notice });
+        this.setData({ ...navigation, chapterLabel: b.contentType === 'book' ? '第 ' + (b.chapters.findIndex(x => x.id === id) + 1) + ' 章' : unitTitle(b, id), chapterOptions, book: b, chapter: c, title: episode ? episode.title : b.chapters.find(x => x.id === id).title, updated: false, notice });
         player.load(b, c, index);
         player.setForeground(this.active);
         const p = progressStore.get(b).state.progress;
