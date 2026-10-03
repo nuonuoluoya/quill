@@ -11,11 +11,13 @@
   </view>
   <view wx:if="{{speedOpen}}" class="choices"><button size="default" wx:for="{{speeds}}" wx:key="*this" class="choice {{state.speed===item?'active':''}}" data-value="{{item}}" disabled="{{frozen || (!state.speedSupported && item!==1)}}" bindtap="speed">{{item}}×</button></view>
   <view wx:if="{{state.mode==='sentence'}}" class="options"><button size="default" class="speed-text" disabled="{{frozen}}" bindtap="speedPanel">{{state.effectiveSpeed}}×</button><button size="default" class="option {{state.loop?'enabled':''}}" aria-pressed="{{state.loop}}" disabled="{{frozen}}" data-action="loop" bindtap="action"><q-icon name="loop" color="{{state.loop?'green':'muted'}}" size="22"/><text>本句循环</text></button><button size="default" class="option {{state.continuous?'enabled':''}}" aria-pressed="{{state.continuous}}" disabled="{{frozen}}" data-action="continuous" bindtap="action"><q-icon name="continuous" color="{{state.continuous?'green':'muted'}}" size="22"/><text>{{isPodcast?'段内连播':'章内连播'}}</text></button></view>
-  <view class="playback-status small muted" role="status">
-    <view wx:if="{{state.status==='loading'}}">正在准备音频，点击可取消</view>
-    <view wx:elif="{{state.buffering}}">音频缓冲中，可暂停或稍后重试</view>
-    <view wx:elif="{{state.status==='unavailable'}}">本句暂无逐句音频</view>
-    <view wx:elif="{{state.mode==='chapter'}}">{{isPodcast?'当前部分播放完成即停止':'当前章节播放完成即停止'}}</view>
-    <view wx:if="{{!state.speedSupported}}">当前仅支持 1×，已保留倍速偏好</view>
+  <view wx:else class="small muted hint">{{isPodcast?'当前部分播放完成即停止':'当前章节播放完成即停止'}}</view>
+  <view wx:if="{{!state.speedSupported}}" class="small muted hint">当前环境使用 1× 播放，倍速偏好已保留</view><view wx:if="{{state.status==='unavailable'}}" class="small muted hint">本句暂无逐句音频</view>
+</view>
+<view wx:if="{{loadingModal}}" class="loading-overlay" catchtouchmove="preventMove">
+  <view class="loading-dialog" role="dialog" aria-modal="true" aria-label="{{loadingKind==='buffering'?'音频缓冲中':'正在准备音频'}}">
+    <view class="loading-title">{{loadingKind==='buffering'?'音频缓冲中':'正在准备音频'}}</view>
+    <view class="loading-description muted" role="status">请稍候，就绪后将自动播放。</view>
+    <button size="default" class="action outline cancel-loading" bindtap="cancelLoading">取消播放</button>
   </view>
 </view>
