@@ -18,7 +18,7 @@
       <view wx:if="{{!rows.length}}" class="empty">{{query?'没有找到匹配的句子':isPodcast?'当前部分暂无正文':'本章暂无正文'}}</view><button size="default" wx:if="{{more}}" class="action quiet" bindtap="more">加载更多句子</button>
     </block>
   </scroll-view>
-  <q-player-dock wx:if="{{chapter}}" chapter="{{chapter}}" title="{{title}}" frozen="{{frozen}}" is-podcast="{{isPodcast}}" bindlocate="locate" bindspeed="changeSpeed"/>
+  <q-player-dock wx:if="{{chapter}}" id="player-dock" chapter="{{chapter}}" title="{{title}}" frozen="{{frozen}}" is-podcast="{{isPodcast}}" bindlocate="locate" bindspeed="changeSpeed"/>
   <q-sheet open="{{sheet}}" title="{{isPodcast?'选择期与部分':isTv?'选择剧集':'选择章节'}}" bindclose="hideChapters">
     <view class="sheet-book muted serif">{{book.title}} · {{isPodcast?'播客节目':book.contentScope==='sample'?'样本内容':'完整内容'}}</view>
     <q-podcast-catalog wx:if="{{isPodcast && sheet}}" id="podcast-catalog" book="{{book}}" active-chapter-id="{{chapter.chapterId}}" compact bindselect="choosePart"/>
