@@ -18,6 +18,7 @@ function runtime(name) {
     '../../models/content': { content }, '../../models/context': { selectedBook: { value: null } },
     '../../models/preferences': { defaultSpeed: () => 1 }, '../../models/progress': { progressStore: {} },
     '../../models/player': { player: {} }, '../../utils/contracts': { speeds: [1] },
+    '../../models/shadowing': { shadowing: {}, shadowState: { open: false } },
     '../../utils/events': { subscribe: () => () => {} },
     '../../utils/http': { message: e => e.message, toLibrary: () => navigation.push('/pages/library/library'), navigate: url => navigation.push(url) },
     '../../utils/guest-preview': require('../utils/guest-preview'), '../../utils/catalog': require('../utils/catalog'),

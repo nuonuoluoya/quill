@@ -2,8 +2,8 @@
 <view class="page privacy-page">
   <view class="title">只保存学习<view>所需的信息</view></view>
   <view class="privacy-item"><text class="privacy-number">01</text><view class="grow"><view class="section-title">登录与同步</view><view class="body-text">使用微信登录标识关联账号，保存阅读位置与倍速偏好。游客进度仅保存在本机。</view></view></view>
-  <view class="privacy-item"><text class="privacy-number">02</text><view class="grow"><view class="section-title">音频播放</view><view class="body-text">音频仅用于播放，不申请麦克风、通讯录或定位权限。播放时需要网络连接。</view></view></view>
+  <view class="privacy-item"><text class="privacy-number">02</text><view class="grow"><view class="section-title">音频与跟读</view><view class="body-text">听原音无需麦克风权限。仅在你主动使用跟读录音时申请麦克风权限；录音临时保存在本机，不上传。我们不申请通讯录或定位权限。原音播放时需要网络连接。</view></view></view>
   <view class="privacy-item"><text class="privacy-number">03</text><view class="grow"><view class="section-title">由你管理</view><view class="body-text">你可以清除当前书籍当前正文版本的进度，或退出登录。需要删除账号相关数据时，请联系运营方。</view></view></view>
-  <view class="privacy-storage"><view class="section-title">本机与云端</view><view class="body-text">退出登录会清理本机账号缓存，不会自动删除云端记录。日志默认保留 30 天，数据库备份默认保留 7 天，删除请求按运营方说明处理。音频临时缓存受微信运行时管理。</view></view>
+  <view class="privacy-storage"><view class="section-title">本机与云端</view><view class="body-text">退出登录会清理本机账号缓存，不会自动删除云端记录。日志默认保留 30 天，数据库备份默认保留 7 天，删除请求按运营方说明处理。音频临时缓存受微信运行时管理。跟读仅保留当前阅读会话最近一条成功录音，绑定原句；新录音成功后替换旧录音。关闭跟读面板可保留，离开阅读页、换书或切换账号时清理；系统回收临时文件后需要重录。</view></view>
   <button size="default" class="action outline contact-button" bindtap="contact">联系运营方</button><view wx:if="{{notice}}" class="notice">{{notice}}</view>
 </view>

@@ -14,6 +14,13 @@ const { selectedBook } = require('../models/context');
 const book = { bookId: 'b', buildId: 'build', textRevision: 'r', title: 'Book', chapters: [{ id: 'c', title: 'Chapter', sentenceCount: 3, playableCount: 2 }] };
 const chapter = { ...book, chapterId: 'c', chapterAudio: { status: 'unavailable', audioId: null, duration: null, reasons: ['Missing'] }, sentences: [1, 2, 3].map(index => ({ id: 's' + index, index, text: index === 3 ? 'Finding lanterns' : 'A quiet morning', audioId: index === 2 ? null : 'a' + index, duration: index === 2 ? null : 3, alignment: { status: index === 2 ? 'needs_review' : 'verified', reasons: index === 2 ? ['Review'] : [] } })) };
 const tick = () => new Promise(r => setImmediate(r));
+test('跟读面板保持打开，关闭后恢复循环偏好且不自动播放', async () => {
+    content.book = async () => book; content.chapter = async () => chapter; content.snapshot = async () => book;
+    const p = page('reader'); p.onLoad({ bookId: 'b', chapterId: 'c' }); p.onShow(); await tick();
+    player.setLoop(true); const { shadowing, shadowState } = require('../models/shadowing');
+    p.openShadowing(); await tick(); assert.equal(shadowState.open, true); assert.equal(player.suspended, true); assert.equal(playerState.loop, false);
+    shadowing.close(); await tick(); assert.equal(player.suspended, false); assert.equal(playerState.loop, true); assert.notEqual(playerState.status, 'playing'); p.onUnload();
+});
 after(() => { player.dispose(); for (const r of [progressStore.get(book)])
     r.stop(); });
 test('书架：会员分页去重且刷新失败保留书目', async () => { auth.session = { user: { id: 'test-member' } }; content.list = async () => ({ items: [{ ...book, chapterAudioAvailableCount: 0, contentChapterCount: 1 }], nextCursor: 'next' }); const p = page('library'); p.onLoad(); await tick(); assert.equal(p.data.books.length, 1); await p.load(false); assert.equal(p.data.books.length, 1); content.list = async () => { throw Error('请求失败'); }; await p.load(true); assert.equal(p.data.books.length, 1); assert.equal(p.data.error, '请求失败'); p.onUnload(); auth.session = null; });

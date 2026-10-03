@@ -2,6 +2,7 @@
   "navigationBarTitleText": "听力阅读",
   "disableScroll": true,
   "usingComponents": {
+    "q-shadowing": "/components/shadowing/shadowing",
     "q-podcast-catalog": "/components/podcast-catalog/podcast-catalog",
     "q-player-dock": "/components/player-dock/player-dock",
     "q-icon": "/components/icon/icon",

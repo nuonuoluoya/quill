@@ -50,6 +50,7 @@ Component({
             player.sentenceMode(); if (a === 'loop')
             player.setLoop(!playerState.loop); if (a === 'continuous')
             player.setContinuous(!playerState.continuous); },
+        shadow() { if (!this.properties.frozen) this.triggerEvent('shadow'); },
         locate() { this.triggerEvent('locate'); },
         speedPanel() { this.setData({ speedOpen: !this.data.speedOpen }); },
         speed(e) { if (this.properties.frozen)
