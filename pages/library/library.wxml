@@ -4,7 +4,7 @@
     <view class="library-heading">
       <text class="library-title">内容库</text>
       <navigator url="/pages/settings/settings" class="library-settings" hover-class="library-pressed">
-        <text>我的与设置</text><q-icon name="arrow-right" color="muted" size="17"/>
+        <text>设置</text><q-icon name="arrow-right" color="muted" size="17"/>
       </navigator>
     </view>
     <view wx:if="{{!loggedIn}}" class="library-login">

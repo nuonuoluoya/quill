@@ -1,6 +1,6 @@
 <q-nav title="Pidan Vocal" back/>
 <view class="page book-page {{book.previewOfBookId?'is-preview':''}}">
-  <navigator url="/pages/settings/settings" class="book-settings" hover-class="pressed">我的与设置<q-icon name="arrow-right" size="16" color="muted"/></navigator>
+  <navigator url="/pages/settings/settings" class="book-settings" hover-class="pressed">设置<q-icon name="arrow-right" size="16" color="muted"/></navigator>
   <view wx:if="{{error}}" class="empty error">{{error}}<button size="default" class="action outline" bindtap="load">重试</button></view>
   <view wx:elif="{{!book}}" class="empty">正在加载章节目录…</view>
   <block wx:if="{{book}}">

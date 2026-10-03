@@ -1,0 +1,15 @@
+@import '../../wxss/common.wxss';
+:host{display:contents}.confirm-overlay{position:fixed;inset:0;z-index:180}.confirm-backdrop{position:absolute;inset:0;background:rgba(20,25,23,.44)}
+.confirm-panel{position:absolute;bottom:0;left:0;right:0;max-height:80vh;display:flex;flex-direction:column;box-sizing:border-box;padding:30px 20px calc(14px + env(safe-area-inset-bottom));border-radius:24px 24px 0 0;background:#F9F8F5;color:#101A1C;text-align:left}
+.handle{position:absolute;width:44px;height:4px;top:9px;left:calc(50% - 22px);border-radius:3px;background:#C5C6C3}
+.confirm-close,button[size="default"].confirm-close{position:absolute;right:10px;top:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.confirm-title{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:27px;font-weight:600;line-height:1.25;margin:8px 26px 4px 0;flex-shrink:0}
+.confirm-body{flex:0 1 auto;min-height:0;max-height:calc(80vh - 150px - env(safe-area-inset-bottom));overflow:hidden;font-size:15px;line-height:1.55}
+.intro{margin-bottom:10px}.file-row{border-top:1px solid #DCDDD8;padding:10px 0}.file-title{font-family:"Songti SC",SimSun,serif;font-size:17px;color:#101A1C;margin-bottom:2px}.recording-row{padding-bottom:10px}
+.danger-text{color:#A4442B}.preserve-note{background:#E8EEE7;border-radius:9px;padding:10px 12px;font-size:14px;line-height:1.6;margin-top:1px}
+.book-title{font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:23px;line-height:1.25;overflow-wrap:break-word;margin-top:4px}.scope{font-size:14px;margin-top:4px}.consequence{font-size:15px;line-height:1.6;margin-top:15px}
+.pending-warning{color:#A4442B;font-size:15px;margin-top:14px}.reset-warning{display:flex;align-items:center;gap:10px;color:#A4442B;background:#F8ECE6;padding:10px 12px;border-radius:8px;margin-top:14px;font-size:15px}
+.confirm-actions{display:flex;gap:10px;margin-top:12px;flex-shrink:0}.cancel-button,button[size="default"].cancel-button,.confirm-button,button[size="default"].confirm-button{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:48px;padding:8px 10px;border-radius:9px;font-family:"Songti SC",SimSun,serif;font-size:18px}
+.cancel-button,button[size="default"].cancel-button{border:1px solid #244F3E;color:#244F3E}.confirm-button,button[size="default"].confirm-button{background:#A4442B;color:white}
+.warning-symbol{width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:#A4442B;color:#fff;font-weight:600;flex-shrink:0}.reset-warning text{padding-left:10px;border-left:1px solid #A4442B}
+@media(max-width:360px){.confirm-panel{padding-left:18px;padding-right:18px}.confirm-title{font-size:25px}}

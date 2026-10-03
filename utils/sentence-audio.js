@@ -1,6 +1,6 @@
 // Download only the selected sentence. The file belongs to this audio instance,
 // is never saved as persistent content, and is removed when the instance stops.
-function sentenceAudio(wxApi, native) {
+function sentenceAudio(wxApi, native, files) {
     let generation = 0;
     let disposed = false;
     let task = null;
@@ -8,6 +8,7 @@ function sentenceAudio(wxApi, native) {
     let errorListener = () => {};
     const remove = path => {
         if (!path) return;
+        if (files) { void files.remove(path); return; }
         try { wxApi.getFileSystemManager().unlink({ filePath: path, fail() {} }); }
         catch (_) { /* The platform also manages the lifetime of temporary files. */ }
     };
@@ -51,9 +52,11 @@ function sentenceAudio(wxApi, native) {
             cancel();
             release();
             const op = generation;
+            const finished = files?.begin() || (() => {});
             let completed = false;
             const current = () => !disposed && op === generation;
             const fail = () => {
+                finished();
                 completed = true;
                 if (!current()) return;
                 task = null;
@@ -64,6 +67,7 @@ function sentenceAudio(wxApi, native) {
                     url,
                     timeout: 15000,
                     success(result) {
+                        files?.track(result.tempFilePath); finished();
                         completed = true;
                         if (!current()) { remove(result.tempFilePath); return; }
                         task = null;

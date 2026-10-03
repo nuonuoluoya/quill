@@ -1,4 +1,4 @@
-<q-nav title="我的与设置" back/>
+<view class="settings-nav"><q-nav title="设置" back/></view>
 <view class="page settings-page {{loggedIn?'':'guest-page'}}">
   <block wx:if="{{!loggedIn}}">
     <view class="guest-mark"><q-icon name="book-audio" color="green" size="72"/></view>
@@ -12,15 +12,21 @@
   </block>
   <block wx:else>
     <view class="title settings-title">安心听，<view>随时继续。</view></view>
-    <view class="account-row"><view class="avatar"><q-icon name="user" size="32"/></view><view><view>微信账号已登录</view><text class="muted small">阅读位置可在设备间同步</text></view></view>
+    <view class="account-row"><view class="avatar"><q-icon name="user" color="green" size="32"/></view><view><view>微信账号已登录</view><text class="muted small">阅读位置可在设备间同步</text></view></view>
     <button wx:if="{{hasReturnChapter}}" size="default" class="action primary" bindtap="resumeRequested" disabled="{{busy}}">继续阅读所选章节</button>
+  </block>
+  <view class="settings-controls">
     <view class="setting"><view class="section-title">播放偏好</view><view class="muted preference-label">默认倍速</view><view class="choices"><button size="default" wx:for="{{speeds}}" wx:key="*this" class="choice {{speed===item?'active':''}}" data-value="{{item}}" bindtap="setSpeed">{{item}}×</button></view></view>
-    <view class="setting"><view class="section-title">阅读进度</view><view wx:if="{{book}}" class="sync-row"><q-icon name="cloud" size="33"/><view class="grow"><view>{{status}}</view><view class="small muted">{{position}}</view></view><button size="default" class="sync-button" disabled="{{busy}}" bindtap="sync">立即同步</button></view><view wx:else class="muted small no-progress">从书架选择一本书后，在这里管理进度。</view></view>
+    <view class="setting"><view class="section-title">阅读进度</view><view wx:if="{{book}}" class="sync-row"><q-icon name="cloud" color="green" size="38"/><view class="grow"><view>{{status}}</view><view class="small muted">{{position}}</view></view><button wx:if="{{loggedIn}}" size="default" class="sync-button" disabled="{{busy}}" bindtap="sync">立即同步</button></view><view wx:else class="muted small no-progress">从内容库选择内容后，在这里管理进度。</view></view>
+    <button size="default" class="settings-link data-link" disabled="{{busy || audioBusy}}" bindtap="openAudio" hover-class="row-pressed"><view><view>清除音频缓存</view><view class="link-description">清理本机音频，保留学习进度</view></view><q-icon name="arrow-right" color="muted" size="19"/></button>
+    <view wx:if="{{audioBusy || audioResult}}" class="operation-result" role="status">{{audioBusy?'正在清理音频缓存…':audioResult}}</view>
+    <button size="default" class="settings-link data-link" disabled="{{busy || audioBusy || !book}}" bindtap="clear" hover-class="row-pressed"><view><view>重置学习进度</view><view class="link-description">{{book?'仅限当前内容版本':'先选择要重置的内容'}}</view></view><q-icon name="arrow-right" color="muted" size="19"/></button>
+    <view wx:if="{{resetResult}}" class="operation-result" role="status">{{resetResult}}</view>
     <navigator url="/pages/privacy/privacy" class="settings-link" hover-class="row-pressed"><text>隐私说明</text><q-icon name="arrow-right" color="muted" size="19"/></navigator>
     <button size="default" class="settings-link" bindtap="about" hover-class="row-pressed"><text>关于 Pidan Vocal</text><q-icon name="arrow-right" color="muted" size="19"/></button>
-    <button size="default" class="clear-progress" disabled="{{busy || !book}}" bindtap="clear"><view>清除当前书籍进度</view><text class="small muted">仅影响当前书籍当前正文版本的阅读位置</text></button>
-    <button size="default" class="action outline" bindtap="exit">退出登录</button>
-  </block>
+    <button wx:if="{{loggedIn}}" size="default" class="action outline logout-button" disabled="{{busy || audioBusy}}" bindtap="exit">退出登录</button>
+  </view>
   <view wx:if="{{error || authError}}" class="notice error">{{error || authError}}</view>
   <q-conflict wx:if="{{book}}" book="{{book}}" bindresolved="refresh"/>
 </view>
+<q-settings-confirm id="settings-confirm" kind="{{confirmKind}}" title="{{confirmTitle}}" logged-in="{{confirmLoggedIn}}" pending="{{confirmPending}}" is-book="{{confirmIsBook}}" busy="{{busy || audioBusy}}" bindcancel="cancelConfirm" bindconfirm="confirmAction"/>

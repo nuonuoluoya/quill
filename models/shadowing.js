@@ -4,10 +4,11 @@ const { observable } = require('../utils/events');
 const { player, playerState } = require('./player');
 const { content } = require('./content');
 const { onIdentityChange } = require('./auth');
+const { audioFiles } = require('../utils/audio-files');
 const shadowState = observable(initialShadowing());
 let preference;
 const shadowing = new Shadowing(shadowState, {
-    ...recordingPorts(wx), now: () => Date.now(),
+    ...recordingPorts(wx, audioFiles(wx)), now: () => Date.now(),
     forgetPreferences() { preference = null; },
     pauseOrdinary() {
         preference = { book: player.book, loop: playerState.loop, continuous: playerState.continuous };
@@ -20,7 +21,7 @@ const shadowing = new Shadowing(shadowState, {
             preference = null;
         }
     },
-    original: (target, speed, events) => originalAudio(wx, content.playback, target, speed, events),
+    original: (target, speed, events) => originalAudio(wx, content.playback, target, speed, events, audioFiles(wx)),
     mine: (path, events) => localAudio(wx, path, events)
 });
 onIdentityChange(() => shadowing.reset());

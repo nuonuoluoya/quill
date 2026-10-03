@@ -1,6 +1,7 @@
 {
-  "navigationBarTitleText": "我的与设置",
+  "navigationBarTitleText": "设置",
   "usingComponents": {
+    "q-settings-confirm": "/components/settings-confirm/settings-confirm",
     "q-icon": "/components/icon/icon",
     "q-conflict": "/components/conflict/conflict",
     "q-nav": "/components/nav/nav"

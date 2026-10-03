@@ -189,7 +189,7 @@ class Player {
             void this.start();
     }
     async start(retry = false) {
-        if (this.suspended || !this.book || !this.chapter || !this.foreground)
+        if (this.suspended || this.cleanupSuspended || !this.book || !this.chapter || !this.foreground)
             return;
         if (this.state.mode === 'sentence' &&
             (!this.chapter.sentences[this.state.index] ||

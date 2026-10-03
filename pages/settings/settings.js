@@ -8,13 +8,29 @@ const { speeds } = require('../../utils/contracts');
 const { subscribe, emit } = require('../../utils/events');
 const { environment, storage, confirm, message, toLibrary } = require('../../utils/http');
 const { FULL_BOOK_ID } = require('../../utils/guest-preview');
+const { cleanupState, clearAudio } = require('../../models/audio-cleanup');
+const scopeKey = () => { const b = selectedBook.value; return JSON.stringify([identity(), auth.epoch, b?.bookId, b?.buildId, b?.textRevision]); };
+const pendingProgress = r => !!(r.transport && (r.state.dirty || r.state.inflight));
+const resetResult = (r, b) => {
+    if (r.state.conflict) return '重置尚未完成，请处理进度冲突';
+    if (r.state.resetting || r.state.inflight) return '重置尚未完成 · ' + progressStore.status(b);
+    if (!r.saved) return '本机保存未完成，请重试';
+    if (r.state.progress) return '';
+    return auth.session ? '当前内容版本的本机与云端进度已重置' : '此设备上的游客进度已重置';
+};
 Page({
-    data: { loggedIn: false, consent: false, busy: false, error: '', book: null, position: '', status: '', speed: 1, speeds, hasReturnChapter: false },
+    data: { loggedIn: false, consent: false, busy: false, error: '', book: null, position: '', status: '', speed: 1, speeds, hasReturnChapter: false, confirmKind: '', confirmTitle: '', confirmLoggedIn: false, confirmPending: false, confirmIsBook: false, audioBusy: false, audioResult: '', resetResult: '' },
     onLoad(q = {}) { this.alive = true; this.returnChapterId = q.returnBookId === FULL_BOOK_ID && typeof q.returnChapterId === 'string' ? q.returnChapterId : ''; this.setData({ hasReturnChapter: !!this.returnChapterId }); this.off = subscribe(() => this.refresh()); },
     onShow() { this.refresh(); if (auth.session && this.returnChapterId && !this.returnAttempted) { this.returnAttempted = true; this.resumeRequested(); } },
+    onHide() { if (!this.data.busy && !cleanupState.busy) this.cancelConfirm(); },
     onUnload() { this.alive = false; this.off(); },
     refresh() { if (!this.alive)
-        return; const b = selectedBook.value, p = b ? progressStore.get(b).state.progress : null; this.setData({ loggedIn: !!auth.session, book: b, position: p ? progressStore.position(b, p) : '尚未开始阅读', status: b ? progressStore.status(b) : '', speed: p ? p.preferredSpeed : defaultSpeed(), authError: auth.error }); },
+        return; const b = selectedBook.value, r = b ? progressStore.get(b) : null, p = r?.state.progress;
+        if (this.data.confirmKind && this.confirmScope !== scopeKey()) { this.confirmScope = ''; this.setData({ confirmKind: '', error: '账号或当前内容已变化，请重新选择操作' }); }
+        if (this.resetScope && this.resetScope !== scopeKey()) { this.resetScope = ''; this.setData({ resetResult: '' }); }
+        if (this.resetScope && this.data.resetResult && r) this.setData({ resetResult: resetResult(r, b) });
+        this.setData({ loggedIn: !!auth.session, book: b, position: p ? progressStore.position(b, p) : '尚未开始阅读', status: b ? progressStore.status(b) : '', speed: p ? p.preferredSpeed : defaultSpeed(), authError: auth.error,
+            audioBusy: cleanupState.busy, audioResult: cleanupState.result, ...(this.data.confirmKind === 'reset' && r ? { confirmPending: pendingProgress(r) } : {}) }); },
     consent(e) { this.setData({ consent: e.detail.value.includes('agree') }); },
     experience() { this.returnChapterId = ''; toLibrary(); },
     async openRequestedChapter() {
@@ -67,13 +83,15 @@ Page({
     } const b = this.data.book, p = b ? progressStore.get(b).state.progress : null; if (p)
         progressStore.update(b, { ...p, preferredSpeed: speed }); this.refresh(); },
     async sync() { const b = this.data.book; if (!b || this.data.busy)
-        return; this.setData({ busy: true, error: '' }); try {
+        return; this.setData({ busy: true, error: '', resetResult: '' }); try {
         const r = progressStore.get(b);
         if (r.state.deferred) {
             r.state.deferred = false;
             emit();
         }
-        else {
+        else if (r.state.resetting && !r.state.conflict) {
+            await r.clear();
+        } else {
             await r.pull();
             await r.flush();
         }
@@ -87,20 +105,44 @@ Page({
             this.refresh();
         }
     } },
-    async clear() { const b = this.data.book; if (!b || this.data.busy)
-        return; if (!await confirm('清除本书当前正文版本进度', `《${b.title}》\n正文版本：${b.textRevision}\n${auth.session ? '此账号所有设备' : '本机'}的位置与速度偏好将被清除，其他书籍和正文版本不受影响。无法撤销。`, '清除进度'))
-        return; this.setData({ busy: true }); player.dispose(); try {
+    openAudio() {
+        if (this.data.busy || cleanupState.busy) return;
+        this.confirmScope = scopeKey(); this.setData({ confirmKind: 'audio', error: '' });
+    },
+    clear() {
+        if (this.data.busy || cleanupState.busy) return;
+        const b = selectedBook.value;
+        if (!b) { this.setData({ error: '先选择要重置的内容' }); return; }
         const r = progressStore.get(b);
-        await r.clear();
-        if (!r.state.resetting && !r.state.conflict)
-            progressStore.forgetRecent(b.bookId);
-    }
-    finally {
-        if (this.alive) {
-            this.setData({ busy: false });
-            this.refresh();
+        if (r.state.resetting) { this.setData({ error: '重置尚未完成，请通过同步继续处理' }); return; }
+        this.confirmScope = scopeKey();
+        this.setData({ confirmKind: 'reset', confirmTitle: b.title, confirmLoggedIn: !!auth.session,
+            confirmIsBook: !b.contentType || b.contentType === 'book', confirmPending: pendingProgress(r), error: '', resetResult: '' });
+    },
+    cancelConfirm() { if (this.data.busy || cleanupState.busy) return; this.confirmScope = ''; this.setData({ confirmKind: '' }); },
+    async confirmAction() {
+        if (this.data.busy || cleanupState.busy || !this.data.confirmKind) return;
+        const scope = this.confirmScope;
+        if (scope !== scopeKey()) { this.refresh(); return; }
+        if (this.data.confirmKind === 'audio') {
+            await clearAudio();
+            if (this.alive) { this.setData({ confirmKind: '' }); this.refresh(); }
+            return;
         }
-    } },
+        const b = selectedBook.value; if (!b) return;
+        const r = progressStore.get(b);
+        if (pendingProgress(r) && !this.data.confirmPending) { this.setData({ confirmPending: true }); return; }
+        this.resetScope = scope; this.setData({ busy: true, error: '', resetResult: '' });
+        try {
+            player.dispose();
+            await r.clear();
+            if (!this.alive || scope !== scopeKey()) return;
+            if (!r.state.conflict && !r.state.resetting && !r.state.inflight && !r.state.progress && r.saved)
+                progressStore.forgetRecent(b.bookId);
+            this.setData({ resetResult: resetResult(r, b) });
+        } catch (e) { if (this.alive && scope === scopeKey()) this.setData({ error: message(e) }); }
+        finally { if (this.alive) { this.setData({ busy: false, confirmKind: '' }); this.refresh(); } }
+    },
     about() { wx.showModal({ title: '关于 Pidan Vocal', content: '英语听读与逐句练习。支持章节阅读、全文播放和学习进度同步。', showCancel: false }); },
     async exit() { if (progressStore.hasPending() && !await confirm('有进度尚未同步', '退出将清理此账号的本机缓存和未同步变更，云端已保存的进度会保留。', '退出登录'))
         return; await logout(); selectedBook.value = null; toLibrary(); }

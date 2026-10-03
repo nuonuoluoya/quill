@@ -1,7 +1,7 @@
 const { Player, initialPlayer } = require('../core/player');
 const { sentenceAudio } = require('./sentence-audio');
 const call = (api, name, args = {}) => new Promise((resolve, reject) => api[name]({ ...args, success: resolve, fail: reject }));
-function recordingPorts(api) {
+function recordingPorts(api, files) {
     return {
         async authorize() {
             if (api.requirePrivacyAuthorize) await call(api, 'requirePrivacyAuthorize');
@@ -12,12 +12,14 @@ function recordingPorts(api) {
         },
         record(events) {
             const recorder = api.getRecorderManager(); let done = false;
+            const finished = files?.begin() || (() => {});
             const bindings = {};
             const finish = (kind, value) => {
                 if (done) return;
                 done = true;
                 for (const [name, fn] of Object.entries(bindings)) recorder['off' + name]?.(fn);
-                events[kind](value);
+                if (kind === 'stop') files?.track(value?.tempFilePath);
+                try { events[kind](value); } finally { finished(); }
             };
             bindings.Start = () => { if (!done) events.start(); };
             bindings.Stop = result => finish('stop', result);
@@ -30,14 +32,14 @@ function recordingPorts(api) {
             catch { finish('error'); }
             return { stop() { if (!done) { try { recorder.stop(); } catch { finish('error'); } } } };
         },
-        remove(path) { if (path) { try { api.getFileSystemManager().unlink({ filePath: path, fail() {} }); } catch {} } }
+        remove(path) { if (files) { void files.remove(path); return; } if (path) { try { api.getFileSystemManager().unlink({ filePath: path, fail() {} }); } catch {} } }
     };
 }
-function originalAudio(api, authorize, target, speed, events) {
+function originalAudio(api, authorize, target, speed, events, files) {
     const state = initialPlayer(); let stopped = false, terminal = false, failure;
     const player = new Player(state, () => {
         const audio = api.createInnerAudioContext(); audio.obeyMuteSwitch = false;
-        return sentenceAudio(api, audio);
+        return sentenceAudio(api, audio, files);
     }, async (...args) => { try { return await authorize(...args); } catch (error) { failure = error; throw error; } });
     player.load(target.book, target.chapter, target.sentence.index - 1); player.setSpeed(speed);
     const timer = setInterval(() => {

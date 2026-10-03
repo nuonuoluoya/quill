@@ -17,7 +17,7 @@ class Shadowing {
         this.publish({ hasRecording: !!this.matching(), duration: this.matching() ? this.recording.duration : 0 });
     }
     open(target) {
-        if (this.rec) return false;
+        if (this.rec || this.cleanupSuspended) return false;
         this.stopPlayback(); this.target = target; this.redo = false; this.foreground = true;
         this.ports.pauseOrdinary();
         this.publish({ ...initialShadowing(), open: true, text: target.sentence.text, number: target.sentence.index,
@@ -46,7 +46,7 @@ class Shadowing {
     }
     resume() { this.foreground = true; }
     async startRecording() {
-        if (!this.state.open || !this.foreground || !this.state.reliable || this.rec || this.state.status === 'preparing') return;
+        if (this.cleanupSuspended || !this.state.open || !this.foreground || !this.state.reliable || this.rec || this.state.status === 'preparing') return;
         this.stopPlayback(); const op = this.op, session = this.session, target = this.target;
         let attempt;
         this.publish({ status: 'preparing', error: '', permissionDenied: false, elapsed: 0 });
@@ -121,7 +121,7 @@ class Shadowing {
         this.stopPlayback(); this.redo = true; this.publish({ status: 'ready', error: '' });
     }
     play(source, compare = false) {
-        if (!this.state.open || !this.foreground || this.rec || this.state.status === 'preparing') return;
+        if (this.cleanupSuspended || !this.state.open || !this.foreground || this.rec || this.state.status === 'preparing') return;
         if (this.state.source === source && !compare && !this.state.comparing) { this.stopPlayback(); return; }
         this.stopPlayback();
         if ((source === 'original' && !this.state.reliable) || ((compare || source === 'mine') && !this.matching())) return;

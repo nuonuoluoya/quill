@@ -58,7 +58,8 @@ for (const support of ['global', 'legacy', 'global-failure']) {
                 '../core/player': { Player, initialPlayer },
                 './content': { content: { playback: async () => grant } },
                 './auth': { onIdentityChange() {} },
-                '../utils/sentence-audio': { sentenceAudio }
+                '../utils/sentence-audio': { sentenceAudio },
+                '../utils/audio-files': { audioFiles: () => undefined }
             }, { wx });
             const { player, playerState } = model;
             t.after(() => player.dispose());

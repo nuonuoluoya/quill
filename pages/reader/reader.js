@@ -12,6 +12,7 @@ const { catalog, unitTitle, seasonIdAt } = require('../../utils/catalog');
 const { episodeFor } = require('../../utils/podcast');
 const { identity } = require('../../models/auth');
 const { shadowing, shadowState } = require('../../models/shadowing');
+const { cleanupState } = require('../../models/audio-cleanup');
 Page({
     data: { chapterLabel: '章节', chapterOptions: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, catalogLabel: '章节', unitLabel: '章', isTv: false, isPodcast: false, chapterMode: false, offline: false, book: null, chapter: null, title: '听力阅读', rows: [], query: '', target: '', sheet: false, error: '', notice: '', updated: false, busy: true, frozen: false, hiddenCurrent: false, status: '', more: false },
     onLoad(q) { this.bookId = q.bookId || ''; this.buildId = q.buildId || ''; this.chapterId = q.chapterId || ''; this.sentenceId = q.sentenceId || ''; this.alive = true; this.networkChange = e => { if (this.alive) this.setData({ offline: !e.isConnected }); }; if (wx.onNetworkStatusChange) wx.onNetworkStatusChange(this.networkChange); if (wx.getNetworkType) wx.getNetworkType({ success: e => this.networkChange({ isConnected: e.networkType !== 'none' }) }); this.active = true; this.epoch = 0; this.limit = 40; this.userScrolled = false; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; player.dispose(); this.setData({ book: null, chapter: null, rows: [] }); this.load(); }); this.load(); },
@@ -26,7 +27,7 @@ Page({
         const filtered = searchSentences(c.sentences, this.data.query);
         const current = c.sentences[s.index];
         if (shadowState.open && (shadowing.target?.sentence.id !== current?.id || shadowing.target?.chapter.chapterId !== c.chapterId || s.mode !== 'sentence')) shadowing.close();
-        const frozen = !!progressStore.get(this.data.book).state.resetting;
+        const frozen = !!progressStore.get(this.data.book).state.resetting || cleanupState.busy;
         // 时间进度只更新播放器组件；正文只在选句/搜索等变化时更新。
         const key = [this.epoch, this.data.query, this.limit, s.index, s.mode, s.status, frozen, progressStore.status(this.data.book)].join('|');
         if (key === this.renderKey)

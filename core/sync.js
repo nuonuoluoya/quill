@@ -278,9 +278,11 @@ class SyncRecord {
         }
     }
     async clear() {
-        if (this.job)
+        while (this.job)
             await this.job;
+        if (this.cancelled) return;
         return this.run(async () => {
+            if (this.cancelled) return;
             var _a;
             this.state.resetting = true;
             this.state.deferred = false;
