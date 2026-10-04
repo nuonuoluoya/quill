@@ -17,7 +17,7 @@ Page({
     data: { chapterLabel: '章节', chapterOptions: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, catalogLabel: '章节', unitLabel: '章', isTv: false, isPodcast: false, chapterMode: false, offline: false, book: null, chapter: null, title: '听力阅读', rows: [], query: '', target: '', sheet: false, error: '', notice: '', updated: false, busy: true, frozen: false, hiddenCurrent: false, status: '', more: false },
     onLoad(q) { this.bookId = q.bookId || ''; this.buildId = q.buildId || ''; this.chapterId = q.chapterId || ''; this.sentenceId = q.sentenceId || ''; this.alive = true; this.networkChange = e => { if (this.alive) this.setData({ offline: !e.isConnected }); }; if (wx.onNetworkStatusChange) wx.onNetworkStatusChange(this.networkChange); if (wx.getNetworkType) wx.getNetworkType({ success: e => this.networkChange({ isConnected: e.networkType !== 'none' }) }); this.active = true; this.epoch = 0; this.limit = 40; this.userScrolled = false; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; player.dispose(); this.setData({ book: null, chapter: null, rows: [] }); this.load(); }); this.load(); },
     onShow() { this.active = true; shadowing.resume(); player.setForeground(true); this.checkAccess(); clearInterval(this.timer); this.timer = setInterval(() => this.checkAccess(), 60000); },
-    onHide() { this.active = false; shadowing.interrupt(); player.setForeground(false); progressStore.flushAll(); clearInterval(this.timer); },
+    onHide() { this.active = false; this.updateRequest = (this.updateRequest || 0) + 1; if (this.updateLoadEpoch === this.epoch && this.data.busy) { this.epoch++; this.updateLoadEpoch = null; this.setData({ busy: false, error: '内容更新已取消，请重试' }); } shadowing.interrupt(); player.setForeground(false); progressStore.flushAll(); clearInterval(this.timer); },
     onUnload() { this.alive = false; shadowing.reset(); if (wx.offNetworkStatusChange) wx.offNetworkStatusChange(this.networkChange); this.epoch++; clearInterval(this.timer); this.off(); this.identityOff(); player.onSelection = () => { }; player.dispose(); progressStore.flushAll(); },
     refresh() {
         if (!this.alive || !this.data.book || !this.data.chapter)
@@ -38,13 +38,14 @@ Page({
     save(index = playerState.index) { const b = this.data.book, c = this.data.chapter; if (!b || !c || progressStore.get(b).state.resetting)
         return; const s = c.sentences[index]; if (!s)
         return; progressStore.update(b, { bookId: b.bookId, textRevision: b.textRevision, sourceBuildId: b.buildId, chapterId: c.chapterId, sentenceId: s.id, preferredSpeed: playerState.speed, updatedAt: new Date().toISOString() }, s.index); },
-    async load(newest = false) { const op = ++this.epoch; shadowing.close(); player.dispose(); this.limit = 40; this.renderKey = ''; this.setData({ busy: true, error: '', notice: '', query: '', chapter: null, rows: [] }); try {
+    async load(newest = false, current = () => true) { if (!this.alive || !current()) return; const op = ++this.epoch; shadowing.close(); player.dispose(); this.limit = 40; this.renderKey = ''; this.setData({ busy: true, error: '', notice: '', query: '', chapter: null, rows: [] }); try {
         const b = this.buildId && !newest ? await api('/books/' + encodeURIComponent(this.bookId) + '/builds/' + encodeURIComponent(this.buildId)).then(checkBook) : await content.book(this.bookId);
+        if (!this.alive || op !== this.epoch || !current()) return;
         const id = b.chapters.some(c => c.id === this.chapterId) ? this.chapterId : (b.chapters.find(c => c.sentenceCount > 0) || b.chapters[0] || {}).id;
         if (!id)
             throw Error('本书暂无章节');
         const c = await content.chapter(b, id);
-        if (!this.alive || op !== this.epoch)
+        if (!this.alive || op !== this.epoch || !current())
             return;
         this.buildId = b.buildId;
         this.chapterId = id;
@@ -65,7 +66,7 @@ Page({
         this.locate();
     }
     catch (e) {
-        if (this.alive && op === this.epoch)
+        if (this.alive && op === this.epoch && current())
             this.setData({ error: message(e), chapter: null, rows: [] });
     }
     finally {
@@ -87,20 +88,26 @@ Page({
             this.setData({ chapter: null, rows: [], error: message(e) });
         }
     } },
-    async updateContent() { const b = this.data.book; if (!b)
-        return; try {
+    async updateContent() { const b = this.data.book; if (!b || !this.alive || !this.active)
+        return; const epoch = this.epoch, request = this.updateRequest = (this.updateRequest || 0) + 1;
+        const current = () => this.alive && this.active && this.epoch === epoch && this.updateRequest === request && this.data.book === b;
+        try {
         const latest = await content.book(b.bookId);
+        if (!current()) return;
         const c = this.data.chapter;
         this.sentenceId = latest.textRevision === b.textRevision && c && c.sentences[playerState.index] ? c.sentences[playerState.index].id : '';
         if (latest.textRevision !== b.textRevision)
             this.chapterId = '';
         this.buildId = '';
-        await this.load(true);
-        if (latest.textRevision !== b.textRevision)
+        const loadingEpoch = this.epoch + 1;
+        this.updateLoadEpoch = loadingEpoch;
+        await this.load(true, () => this.active && this.updateRequest === request);
+        if (this.updateLoadEpoch === loadingEpoch) this.updateLoadEpoch = null;
+        if (this.alive && this.active && this.epoch === loadingEpoch && this.updateRequest === request && this.data.chapter && !this.data.error && latest.textRevision !== b.textRevision)
             this.setData({ notice: '正文版本已更新，旧版进度独立保留。' });
     }
     catch (e) {
-        this.setData({ notice: message(e) });
+        if (current()) this.setData({ notice: message(e) });
     } },
     search(e) { this.limit = 40; this.setData({ query: e.detail.value }); this.refresh(); },
     more() { this.limit += 40; this.refresh(); },

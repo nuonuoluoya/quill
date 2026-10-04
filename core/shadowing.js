@@ -48,11 +48,12 @@ class Shadowing {
     async startRecording() {
         if (this.cleanupSuspended || !this.state.open || !this.foreground || !this.state.reliable || this.rec || this.state.status === 'preparing') return;
         this.stopPlayback(); const op = this.op, session = this.session, target = this.target;
+        const current = () => op === this.op && session === this.session && this.state.open && this.foreground && !this.cleanupSuspended;
         let attempt;
         this.publish({ status: 'preparing', error: '', permissionDenied: false, elapsed: 0 });
         try {
-            await this.ports.authorize();
-            if (op !== this.op || !this.state.open || !this.foreground) return;
+            await this.ports.authorize(current);
+            if (!current()) return;
             const rec = { session, key: targetKey(target), started: false, keep: true, interrupted: false };
             this.rec = rec; attempt = rec; this.lock();
             // Keep ownership until a terminal recorder callback; cancelled starts must drain.

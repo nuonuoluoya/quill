@@ -3,12 +3,16 @@ const { sentenceAudio } = require('./sentence-audio');
 const call = (api, name, args = {}) => new Promise((resolve, reject) => api[name]({ ...args, success: resolve, fail: reject }));
 function recordingPorts(api, files) {
     return {
-        async authorize() {
-            if (api.requirePrivacyAuthorize) await call(api, 'requirePrivacyAuthorize');
+        async authorize(current = () => true) {
+            const check = () => { if (!current()) throw { code: 'CANCELLED' }; };
+            check();
+            if (api.requirePrivacyAuthorize) { await call(api, 'requirePrivacyAuthorize'); check(); }
             const setting = await call(api, 'getSetting');
+            check();
             if (setting.authSetting?.['scope.record'] === false) throw { code: 'DENIED' };
             try { await call(api, 'authorize', { scope: 'scope.record' }); }
-            catch { throw { code: 'DENIED' }; }
+            catch { check(); throw { code: 'DENIED' }; }
+            check();
         },
         record(events) {
             const recorder = api.getRecorderManager(); let done = false;
