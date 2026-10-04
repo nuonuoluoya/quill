@@ -3,7 +3,7 @@
   align-items:center;
   flex-shrink:0
 }
-image {
+.ui-image {
   display:block
 }
 

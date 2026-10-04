@@ -1,6 +1,6 @@
 <q-sheet open="{{open}}" title="选择要保留的进度" bindclose="later">
-  <view class="conflict-intro muted">另一台设备更新了阅读位置。</view>
-  <view class="conflict-card"><view class="phone-symbol"/><view class="grow"><view>本机</view><view class="conflict-position serif">{{local}}</view></view></view>
-  <view class="conflict-card"><q-icon name="cloud" color="green" size="34"/><view class="grow"><view>云端</view><view class="conflict-position serif">{{cloud}}</view></view></view>
-  <button size="default" class="action outline" disabled="{{busy}}" data-choice="cloud" bindtap="choose">使用云端</button><button size="default" class="action outline" disabled="{{busy}}" data-choice="local" bindtap="choose">{{resetting?'清除云端当前版本进度':'保留本机并同步'}}</button><button size="default" class="action quiet later" disabled="{{busy}}" bindtap="later">稍后处理</button><view class="conflict-hint">选择后不会自动播放</view>
+  <view class="ui-view conflict-intro muted">另一台设备更新了阅读位置。</view>
+  <view class="ui-view conflict-card"><view class="ui-view phone-symbol"/><view class="ui-view grow"><view class="ui-view">本机</view><view class="ui-view conflict-position serif">{{local}}</view></view></view>
+  <view class="ui-view conflict-card"><q-icon name="cloud" color="green" size="34"/><view class="ui-view grow"><view class="ui-view">云端</view><view class="ui-view conflict-position serif">{{cloud}}</view></view></view>
+  <button size="default" class="ui-button {{(busy)?'is-disabled':''}} action outline" disabled="{{busy}}" data-choice="cloud" bindtap="choose">使用云端</button><button size="default" class="ui-button {{(busy)?'is-disabled':''}} action outline" disabled="{{busy}}" data-choice="local" bindtap="choose">{{resetting?'清除云端当前版本进度':'保留本机并同步'}}</button><button size="default" class="ui-button {{(busy)?'is-disabled':''}} action quiet later" disabled="{{busy}}" bindtap="later">稍后处理</button><view class="ui-view conflict-hint">选择后不会自动播放</view>
 </q-sheet>

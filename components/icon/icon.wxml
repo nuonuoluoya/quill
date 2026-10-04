@@ -1,1 +1,1 @@
-<image src="/imgs/icons/{{name}}-{{color}}.svg" style="width:{{size}}px;height:{{size}}px" mode="aspectFit" aria-hidden="true" />
+<image src="/imgs/icons/{{name}}-{{color}}.svg" style="width:{{size}}px;height:{{size}}px" mode="aspectFit" aria-hidden="true"  class="ui-image"/>

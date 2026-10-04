@@ -1,6 +1,6 @@
-<view class="nav" style="padding-top:{{statusBarHeight}}px">
-  <view class="nav-bar" style="height:{{barHeight}}px;padding-right:{{rightInset}}px">
-    <button size="default" wx:if="{{back}}" class="nav-back" bindtap="goBack" aria-label="返回" hover-class="nav-pressed"><q-icon name="arrow-left" size="21"/></button>
-    <text class="nav-title {{back?'':'nav-brand'}}">{{title}}</text>
+<view class="ui-view nav" style="padding-top:{{statusBarHeight}}px">
+  <view class="ui-view nav-bar" style="height:{{barHeight}}px;padding-right:{{rightInset}}px">
+    <button size="default" wx:if="{{back}}" class="ui-button nav-back" bindtap="goBack" aria-label="返回" hover-class="nav-pressed"><q-icon name="arrow-left" size="21"/></button>
+    <text class="ui-text nav-title {{back?'':'nav-brand'}}">{{title}}</text>
   </view>
 </view>

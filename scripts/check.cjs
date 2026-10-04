@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { checkComponentStyles } = require('./component-styles.cjs');
 const root = path.resolve(__dirname, '..');
 const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
 const ignored = new Set(['frontend', 'contracts', '.codex-tools', 'node_modules', '.git']);
@@ -21,6 +22,7 @@ for (const file of files) {
     const text = fs.readFileSync(file, 'utf8');
     if (file.endsWith('.json')) {
         const cfg = JSON.parse(text);
+        if (cfg.component === true) checkComponentStyles(file.slice(0, -5) + '.wxss');
         for (const value of Object.values(cfg.usingComponents || {})) {
             const component = value.startsWith('/') ? path.join(root, value) : path.resolve(path.dirname(file), value);
             for (const ext of ['.js', '.json', '.wxml', '.wxss'])
