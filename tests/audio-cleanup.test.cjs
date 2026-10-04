@@ -80,10 +80,10 @@ test('cleanup drains recording stop and deletes its late temporary file', async 
     const work = r.files.clear(() => recording.stop()); await tick(); assert.equal(stopped, 1);
     onStop({ tempFilePath: b }); assert.equal(await work, 'success'); assert.deepEqual(r.deleted, [b]);
 });
-test('cleanup locks reject new ordinary playback, shadowing, recording and comparisons', async () => {
+test('cleanup locks reject new ordinary playback, shadowing, recording and manual replay', async () => {
     let calls = 0;
     const p = new Player(initialPlayer(), () => { calls++; }, async () => { calls++; });
     p.cleanupSuspended = true; await p.start(); assert.equal(calls, 0);
     const s = new Shadowing(initialShadowing(), { authorize: async () => { calls++; } }); s.cleanupSuspended = true;
-    assert.equal(s.open({}), false); await s.startRecording(); s.play('compare'); assert.equal(calls, 0);
+    assert.equal(s.open({}), false); await s.startRecording(); s.play('original'); assert.equal(calls, 0);
 });

@@ -1,7 +1,7 @@
 const { playable } = require('../utils/contracts');
 const initialShadowing = () => ({ open: false, status: 'ready', text: '', number: 0, reliable: false,
     hasRecording: false, duration: 0, elapsed: 0, error: '', permissionDenied: false,
-    comparing: false, source: '', sourceStatus: '', currentTime: 0, sourceDuration: 0, originalDone: false });
+    source: '', sourceStatus: '', currentTime: 0, sourceDuration: 0 });
 const targetKey = t => JSON.stringify([t.owner, t.book.bookId, t.book.buildId, t.book.textRevision, t.chapter.chapterId, t.sentence.id]);
 
 // Platform-neutral owner of one temporary recording and one active sound source.
@@ -12,22 +12,22 @@ class Shadowing {
     publish(value) { Object.assign(this.state, value); this.ports.changed?.(); }
     lock() { this.ports.lock(this.state.open || !!this.rec); }
     matching() { return this.recording && this.target && this.recording.key === targetKey(this.target); }
-    idle() { return this.matching() && !this.redo ? 'recorded' : 'ready'; }
+    idle() { return this.matching() ? 'recorded' : 'ready'; }
     refreshRecording() {
         this.publish({ hasRecording: !!this.matching(), duration: this.matching() ? this.recording.duration : 0 });
     }
     open(target) {
         if (this.rec || this.cleanupSuspended) return false;
-        this.stopPlayback(); this.target = target; this.redo = false; this.foreground = true;
+        this.stopPlayback(); this.target = target; this.foreground = true;
         this.ports.pauseOrdinary();
         this.publish({ ...initialShadowing(), open: true, text: target.sentence.text, number: target.sentence.index,
             reliable: playable(target.sentence) });
         this.refreshRecording(); this.publish({ status: this.idle() }); this.lock(); return true;
     }
     stopPlayback() {
-        this.op++; clearTimeout(this.gap); this.gap = null;
+        this.op++;
         const sound = this.sound; this.sound = null; sound?.stop();
-        this.publish({ comparing: false, source: '', sourceStatus: '', currentTime: 0, sourceDuration: 0, status: this.idle() });
+        this.publish({ source: '', sourceStatus: '', currentTime: 0, sourceDuration: 0, status: this.idle() });
     }
     close() {
         this.stopPlayback(); this.stopRecording(); this.publish({ open: false }); this.lock();
@@ -35,12 +35,12 @@ class Shadowing {
     reset() {
         this.session++; this.ports.forgetPreferences?.(); this.close();
         if (this.recording) this.ports.remove(this.recording.path);
-        this.recording = null; this.target = null; this.redo = false; this.refreshRecording();
+        this.recording = null; this.target = null; this.refreshRecording();
     }
     interrupt() {
         this.foreground = false;
         const recording = this.rec, active = recording || this.state.status === 'preparing';
-        const playing = !!this.sound || !!this.gap;
+        const playing = !!this.sound;
         this.stopPlayback(); this.stopRecording(true);
         if (active || playing) this.publish({ error: active ? '录音已中断' : '播放已停止' });
     }
@@ -108,7 +108,6 @@ class Shadowing {
             const old = this.recording;
             this.recording = { key: rec.key, path, duration: result.duration / 1000 };
             if (old && old.path !== path) this.ports.remove(old.path);
-            this.redo = false;
         } else if (path && path !== this.recording?.path) this.ports.remove(path);
         this.refreshRecording();
         this.publish({ status: this.idle(), error: rec.session !== this.session ? '' : valid
@@ -116,21 +115,14 @@ class Shadowing {
             : rec.started ? '未能保存录音，请再试一次' : '录音未开始，请重试' });
         this.lock();
     }
-    rerecord() {
-        if (this.rec || this.state.status === 'preparing') return;
-        this.stopPlayback(); this.redo = true; this.publish({ status: 'ready', error: '' });
-    }
-    play(source, compare = false) {
+    play(source) {
+        if (!['original', 'mine'].includes(source)) return;
         if (this.cleanupSuspended || !this.state.open || !this.foreground || this.rec || this.state.status === 'preparing') return;
-        if (this.state.source === source && !compare && !this.state.comparing) { this.stopPlayback(); return; }
+        if (this.state.source === source) { this.stopPlayback(); return; }
         this.stopPlayback();
-        if ((source === 'original' && !this.state.reliable) || ((compare || source === 'mine') && !this.matching())) return;
-        const op = this.op; this.publish({ comparing: compare, originalDone: false, error: '' });
-        this.playPart(source, compare, op);
-    }
-    playPart(source, compare, op) {
-        if (op !== this.op || !this.state.open || !this.foreground) return;
-        this.publish({ source, status: 'playing', sourceStatus: 'loading', currentTime: 0,
+        if ((source === 'original' && !this.state.reliable) || (source === 'mine' && !this.matching())) return;
+        const op = this.op;
+        this.publish({ source, status: 'playing', sourceStatus: 'loading', currentTime: 0, error: '',
             sourceDuration: source === 'mine' ? this.recording.duration : this.target.sentence.duration });
         const current = () => op === this.op && this.state.open && this.foreground && this.state.source === source;
         const events = {
@@ -144,15 +136,11 @@ class Shadowing {
             },
             ended: () => {
                 if (!current()) return;
-                const sound = this.sound; this.sound = null; sound?.stop();
-                if (compare && source === 'original') {
-                    this.publish({ originalDone: true, source: 'gap', sourceStatus: 'waiting' });
-                    this.gap = setTimeout(() => { this.gap = null; this.playPart('mine', true, op); }, 500);
-                } else this.stopPlayback();
+                this.stopPlayback();
             }
         };
         try { const sound = source === 'original'
-            ? this.ports.original(this.target, compare ? 1 : this.target.speed, events)
+            ? this.ports.original(this.target, this.target.speed, events)
             : this.ports.mine(this.recording.path, events);
             if (current() && this.state.source === source) this.sound = sound;
             else sound.stop(); }

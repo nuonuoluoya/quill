@@ -5,46 +5,31 @@
     <view class="ui-view panel-heading"><text class="ui-text">句子跟读</text><button size="default" class="ui-button close" bindtap="close" aria-label="关闭跟读"><q-icon name="close" size="25"/></button></view>
     <view class="ui-view sentence-number">第 {{state.number}} 句</view>
     <scroll-view class="ui-scroll-view quote" scroll-y><view class="ui-view quote-text">{{state.text}}</view></scroll-view>
-    <view wx:if="{{state.error}}" class="ui-view feedback" role="status">{{state.error}}<button wx:if="{{state.permissionDenied}}" size="default" class="ui-button open-settings" bindtap="settings">去开启</button></view>
-    <view wx:if="{{!state.reliable}}" class="ui-view feedback">本句暂无可对比原音</view>
-    <view class="ui-view practice-body">
-      <block wx:if="{{privacyNeeded}}">
-        <view class="ui-view helper">跟读仅在本机临时保存录音，不上传。开始前请阅读并同意隐私说明。</view>
-        <button size="default" class="ui-button old-recording" bindtap="privacyContract">查看隐私保护指引</button>
-        <button id="shadow-privacy-agree" size="default" class="ui-button action primary" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="privacyAgreed">同意并开始录音</button>
-        <button size="default" class="ui-button old-recording" bindtap="close">暂不使用跟读</button>
-      </block>
-      <block wx:elif="{{state.comparing}}">
-        <view class="ui-view source-card {{state.source==='original'?'active':''}}"><view class="ui-view source-heading"><view class="ui-view source-badge">A</view><text class="ui-text">原音</text><text class="ui-text source-state">{{state.originalDone?'已播完':state.sourceStatus==='playing'?'正在播放':state.sourceStatus==='buffering'?'缓冲中':'正在准备'}}</text></view><view class="ui-view progress"><view style="width:{{state.originalDone?100:percent}}%" class="ui-view"/></view><view class="ui-view times"><text class="ui-text">{{state.source==='original'?current:''}}</text><text class="ui-text">{{state.source==='original'?end:''}}</text></view></view>
-        <view class="ui-view source-card {{state.source==='mine'?'active':''}}"><view class="ui-view source-heading"><view class="ui-view source-badge">B</view><text class="ui-text">我的录音</text><text class="ui-text source-state">{{state.source==='gap'?'即将播放':state.source==='mine'?(state.sourceStatus==='playing'?'正在播放':state.sourceStatus==='buffering'?'缓冲中':'正在准备'):'等待播放'}}</text></view><view class="ui-view progress"><view style="width:{{state.source==='mine'?percent:0}}%" class="ui-view"/></view><view class="ui-view times"><text class="ui-text">{{state.source==='mine'?current:'00:00'}}</text><text class="ui-text">{{duration}}</text></view></view>
-        <button size="default" class="ui-button action primary" bindtap="compare"><view class="ui-view stop-symbol"/>停止对比</button>
-        <view class="ui-view helper">原音 → 我的录音 · 1×</view><view class="ui-view helper">播放一轮后停止</view>
-      </block>
-      <block wx:elif="{{state.status==='recording'}}">
-        <view class="ui-view record-status"><view class="ui-view record-dot"/>正在录音</view><view class="ui-view clock">{{clock}}</view>
-        <button size="default" class="ui-button action primary" bindtap="finish"><view class="ui-view stop-symbol"/>结束录音</button>
-        <view class="ui-view helper">点一下结束，不用按住 · 最长 60 秒</view>
-      </block>
-      <block wx:elif="{{state.status==='preparing' || state.status==='saving'}}">
-        <view class="ui-view preparing" role="status">{{state.status==='saving'?'正在保存录音':'正在准备录音'}}</view>
-        <button wx:if="{{state.status==='preparing'}}" size="default" class="ui-button action outline" bindtap="finish">取消录音</button>
-      </block>
-      <block wx:elif="{{state.status==='recorded' || (state.status==='playing' && state.hasRecording)}}">
-        <view class="ui-view helper recorded-label">{{state.source?(state.source==='original'?'正在听原音':'正在听我的录音'):'录音完成'}} · {{duration}}</view>
-        <view class="ui-view two-buttons"><button size="default" class="ui-button {{(!state.reliable)?'is-disabled':''}} action outline" disabled="{{!state.reliable}}" bindtap="original"><q-icon name="{{state.source==='original'?'pause':'play'}}" color="green" size="21"/>{{state.source==='original'?'停止原音':'听原音'}}</button><button size="default" class="ui-button action outline" bindtap="mine"><q-icon name="{{state.source==='mine'?'pause':'play'}}" color="green" size="21"/>{{state.source==='mine'?'停止回放':'听我的'}}</button></view>
-        <button size="default" class="ui-button {{(!state.reliable)?'is-disabled':''}} action primary" disabled="{{!state.reliable}}" bindtap="compare"><q-icon name="compare" color="white" size="25"/>一键对比</button>
-        <view class="ui-view helper">原音 → 我的录音 · 1×</view>
-        <button size="default" class="ui-button redo" bindtap="redo"><q-icon name="refresh" size="23"/>重录</button>
-      </block>
-      <block wx:else>
-        <button size="default" class="ui-button {{(!state.reliable)?'is-disabled':''}} action outline" disabled="{{!state.reliable}}" bindtap="original"><q-icon name="{{state.source==='original'?'pause':'play'}}" color="green" size="22"/>{{state.source==='original'?'停止原音':'听原音'}}</button>
-        <view class="ui-view ready-mark"><q-icon name="microphone" color="green" size="42"/><text class="ui-text">听一遍，再读一遍</text></view>
-        <button size="default" class="ui-button {{(!state.reliable || privacyChecking)?'is-disabled':''}} action primary" disabled="{{!state.reliable || privacyChecking}}" bindtap="record"><q-icon name="microphone" color="white" size="24"/>{{privacyChecking?'正在准备录音':'开始录音'}}</button>
-        <view class="ui-view helper">点击开始和结束，不用按住<view class="ui-view">首次录音需要麦克风权限</view></view>
-        <button wx:if="{{state.hasRecording}}" size="default" class="ui-button old-recording" bindtap="mine">听上一次录音</button>
-      </block>
-      <view wx:if="{{state.source && !state.comparing}}" class="ui-view helper" role="status">{{state.sourceStatus==='loading'?'正在准备音频':state.sourceStatus==='buffering'?'音频缓冲中':current+' / '+end}}</view>
+    <view wx:if="{{privacyNeeded}}" class="ui-view privacy-actions">
+      <view class="ui-view helper">跟读仅在本机临时保存录音，不上传。开始前请阅读并同意隐私说明。</view>
+      <button size="default" class="ui-button privacy-link" bindtap="privacyContract">查看隐私保护指引</button>
+      <button id="shadow-privacy-agree" size="default" class="ui-button action primary" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="privacyAgreed">同意并开始录音</button>
+      <button size="default" class="ui-button privacy-link" bindtap="finish">暂不录音</button>
     </view>
+    <view wx:else class="ui-view practice-body">
+      <view class="ui-view status-line {{state.error?'feedback':''}}" role="status"><block wx:if="{{state.status==='recording'}}"><view class="ui-view record-dot"/>正在录音</block><block wx:else>{{privacyChecking?'正在准备录音':statusText}}</block></view>
+      <view class="ui-view listening-slot">
+        <view wx:if="{{state.status==='recording'}}" class="ui-view clock">{{clock}}</view>
+        <view wx:elif="{{state.status==='preparing' || state.status==='saving' || privacyChecking}}" class="ui-view preparing">{{state.status==='saving'?'请稍候':'准备就绪后开始计时'}}</view>
+        <view wx:else class="ui-view two-buttons">
+          <button size="default" class="ui-button action outline listen-original {{state.source==='original'?'listening':''}} {{!state.reliable?'is-disabled':''}}" disabled="{{!state.reliable}}" aria-pressed="{{state.source==='original'}}" bindtap="original"><view wx:if="{{state.source==='original'}}" class="ui-view stop-symbol"/><q-icon wx:else name="play" color="green" size="21"/>{{state.source==='original'?'停止原音':'听原音'}}</button>
+          <button wx:if="{{state.hasRecording}}" size="default" class="ui-button action outline listen-mine {{state.source==='mine'?'listening':''}}" aria-pressed="{{state.source==='mine'}}" bindtap="mine"><view wx:if="{{state.source==='mine'}}" class="ui-view stop-symbol"/><q-icon wx:else name="play" color="green" size="21"/>{{state.source==='mine'?'停止我的':'听我的'}}</button>
+        </view>
+      </view>
+      <view class="ui-view main-slot">
+        <button wx:if="{{state.status==='recording'}}" size="default" class="ui-button action primary main-action" bindtap="finish"><view class="ui-view stop-symbol"/>结束录音</button>
+        <button wx:elif="{{state.status==='preparing' || privacyChecking}}" size="default" class="ui-button action outline main-action" bindtap="finish">取消录音</button>
+        <button wx:elif="{{state.status==='saving'}}" size="default" class="ui-button action primary main-action is-disabled" disabled>正在保存录音</button>
+        <button wx:else size="default" class="ui-button action primary main-action {{!state.reliable?'is-disabled':''}}" disabled="{{!state.reliable}}" bindtap="record"><q-icon name="{{state.hasRecording?'refresh':'microphone'}}" color="white" size="24"/>{{state.hasRecording?'重录':'开始录音'}}</button>
+      </view>
+      <view class="ui-view helper-slot"><view wx:if="{{state.status==='recording'}}">点一下结束，不用按住 · 最长 60 秒</view><view wx:elif="{{!state.hasRecording && state.status==='ready'}}">首次录音需要麦克风权限</view></view>
+    </view>
+    <button wx:if="{{state.permissionDenied && !privacyNeeded}}" size="default" class="ui-button privacy-link" bindtap="settings">去开启麦克风</button>
     <view class="ui-view privacy-note">录音仅在本机临时保存</view>
   </view>
 </view>

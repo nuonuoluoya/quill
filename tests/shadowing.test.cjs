@@ -51,7 +51,7 @@ test('cancelled pending start drains before new audio or recording; late start i
     r.events.stop({ tempFilePath: '/cancelled', duration: 500, fileSize: 20 }); assert.ok(h.removed.includes('/cancelled')); assert.equal(h.state.hasRecording, false);
 });
 test('re-record is opt-in; failure and too-short recording preserve the previous valid file', async t => {
-    const h = harness(t); h.engine.open(target()); await h.record('/old'); h.engine.rerecord(); assert.equal(h.auth, 1);
+    const h = harness(t); h.engine.open(target()); await h.record('/old'); assert.equal(h.auth, 1);
     await h.record('/short', 100); assert.equal(h.engine.recording.path, '/old'); assert.ok(h.removed.includes('/short')); assert.ok(!h.removed.includes('/old'));
     await h.engine.startRecording(); h.records.at(-1).events.error(); assert.equal(h.state.hasRecording, true); h.engine.play('mine'); assert.equal(h.sounds.at(-1).path, '/old');
 });
@@ -61,40 +61,74 @@ test('one latest recording stays bound to its sentence and replaces old file onl
     h.engine.close(); h.engine.open(target()); assert.equal(h.state.hasRecording, true);
     await h.record('/two'); assert.deepEqual(h.removed, ['/one']); assert.equal(h.engine.recording.path, '/two');
 });
-test('comparison uses A then 500ms gap then B at 1x once; standalone original retains slow speed', async t => {
-    const h = harness(t); h.engine.open(target()); await h.record(); h.engine.play('original'); assert.equal(h.sounds[0].speed, .75);
-    h.engine.play('original', true); assert.equal(h.sounds[0].stopped, true); const a = h.sounds[1]; assert.equal(a.speed, 1);
-    a.events.ended(); assert.equal(a.stopped, true); assert.equal(h.state.source, 'gap');
-    t.mock.timers.tick(499); assert.equal(h.sounds.length, 2); t.mock.timers.tick(1); const b = h.sounds[2]; assert.equal(b.source, 'mine'); assert.equal(b.speed, 1);
-    b.events.ended(); t.mock.timers.tick(1000); assert.equal(h.sounds.length, 3); assert.equal(h.state.status, 'recorded'); assert.equal(h.state.comparing, false);
+test('re-record stops playback immediately and retains old file until a valid terminal result', async t => {
+    const h = harness(t); h.engine.open(target()); await h.record('/old'); h.engine.play('mine');
+    await h.engine.startRecording(); assert.equal(h.sounds[0].stopped, true);
+    assert.equal(h.state.status, 'preparing'); assert.equal(h.engine.recording.path, '/old');
+    const r = h.records.at(-1); r.events.start(); assert.equal(h.state.status, 'recording');
+    h.engine.play('original'); h.engine.play('mine'); assert.equal(h.sounds.length, 1);
+    h.engine.stopRecording(); assert.equal(h.state.status, 'saving'); assert.equal(h.engine.recording.path, '/old');
+    assert.ok(!h.removed.includes('/old'));
+    r.events.stop({ tempFilePath: '/new', duration: 1200, fileSize: 10 });
+    assert.equal(h.engine.recording.path, '/new'); assert.deepEqual(h.removed, ['/old']);
+    r.events.stop({ tempFilePath: '/new', duration: 1200, fileSize: 10 }); assert.deepEqual(h.removed, ['/old']);
 });
-test('stopping at A load, gap or B cancels every later stage and ignores late callbacks', async t => {
+test('cancelled and denied re-record permissions preserve the old recording and ignore late results', async t => {
+    const h = harness(t); h.engine.open(target()); await h.record('/old');
+    let resolve; h.ports.authorize = () => new Promise(yes => { resolve = yes; });
+    const pending = h.engine.startRecording(); h.engine.stopRecording(); resolve(); await pending;
+    assert.equal(h.records.length, 1); assert.equal(h.state.status, 'recorded');
+    h.ports.authorize = async () => { throw { code: 'DENIED' }; }; await h.engine.startRecording();
+    assert.equal(h.state.status, 'recorded'); assert.equal(h.engine.recording.path, '/old'); assert.equal(h.removed.length, 0);
+    h.engine.play('mine'); assert.equal(h.sounds.at(-1).path, '/old');
+});
+test('synchronous audio completion cannot leave a live source or restart later', async t => {
+    const h = harness(t); h.engine.open(target()); await h.record(); let stops = 0;
+    h.ports.mine = (path, events) => { events.ended(); return { stop() { stops++; } }; };
+    h.engine.play('mine'); assert.equal(stops, 1); assert.equal(h.engine.sound, null);
+    assert.equal(h.state.status, 'recorded'); t.mock.timers.tick(1000); assert.equal(h.state.source, '');
+});
+test('manual switching stops the old source first and endings never start another source', async t => {
     const h = harness(t); h.engine.open(target()); await h.record();
-    for (const stage of ['A', 'gap', 'B']) {
-        h.engine.play('original', true); const a = h.sounds.at(-1);
-        if (stage !== 'A') a.events.ended(); if (stage === 'B') t.mock.timers.tick(500);
-        const last = h.sounds.at(-1), count = h.sounds.length; h.engine.stopPlayback(); a.events.ended(); last.events.update('playing', 2, 3); t.mock.timers.tick(1000);
-        assert.equal(h.sounds.length, count); assert.equal(h.state.source, ''); assert.equal(h.state.comparing, false);
+    for (const source of ['original', 'mine', 'original', 'mine']) {
+        const previous = h.sounds.at(-1);
+        const factory = h.ports[source];
+        h.ports[source] = (...args) => { if (previous) assert.equal(previous.stopped, true); return factory(...args); };
+        h.engine.play(source); h.ports[source] = factory;
+        const current = h.sounds.at(-1); assert.equal(current.speed, source === 'original' ? .75 : 1);
+        assert.equal(h.sounds.filter(s => !s.stopped).length, 1);
+    }
+    const last = h.sounds.at(-1); last.events.ended(); last.events.ended();
+    t.mock.timers.tick(60000); assert.equal(h.sounds.length, 4); assert.equal(h.state.status, 'recorded'); assert.equal(last.stopped, true);
+});
+test('manual stop at load, play or buffering ignores callbacks; re-listening starts from zero', async t => {
+    const h = harness(t); h.engine.open(target()); await h.record();
+    for (const source of ['original', 'mine']) for (const stage of ['loading', 'playing', 'buffering']) {
+        h.engine.play(source); const sound = h.sounds.at(-1); sound.events.update(stage, 1, 3);
+        const count = h.sounds.length; h.engine.play(source); assert.equal(sound.stopped, true);
+        sound.events.ended(); sound.events.update('playing', 2, 3); sound.events.error(); t.mock.timers.tick(1000);
+        assert.equal(h.sounds.length, count); assert.equal(h.state.source, ''); assert.equal(h.state.error, '');
+        h.engine.play(source); assert.equal(h.state.currentTime, 0); assert.notEqual(h.sounds.at(-1), sound); h.engine.stopPlayback();
     }
 });
-test('late A progress, errors and duplicate end events cannot overwrite or restart B', async t => {
-    const h = harness(t); h.engine.open(target()); await h.record(); h.engine.play('original', true);
-    const a = h.sounds[0]; a.events.ended(); a.events.ended(); t.mock.timers.tick(500);
-    assert.equal(h.sounds.length, 2); a.events.update('playing', 99, 100); a.events.error({ code: 'BOOK_FORBIDDEN' });
-    assert.equal(h.state.source, 'mine'); assert.equal(h.state.currentTime, 0); assert.equal(h.state.reliable, true);
+test('rapid original-mine-original switching rejects every stale callback including the same source', async t => {
+    const h = harness(t); h.engine.open(target()); await h.record();
+    h.engine.play('original'); h.engine.play('mine'); h.engine.play('original');
+    for (const old of h.sounds.slice(0, -1)) { old.events.update('playing', 99, 100); old.events.error({ code: 'BOOK_FORBIDDEN' }); old.events.ended(); }
+    t.mock.timers.tick(1000); assert.equal(h.sounds.length, 3); assert.equal(h.state.source, 'original'); assert.equal(h.state.currentTime, 0); assert.equal(h.state.reliable, true);
 });
 test('startup timeout stops capture and a synchronous stop callback cannot leave saving stuck', async t => {
     const h = harness(t); h.engine.open(target()); await h.engine.startRecording(); const r = h.records[0];
     r.stop = () => r.events.stop({}); t.mock.timers.tick(10000); assert.equal(h.engine.rec, null); assert.equal(h.state.status, 'ready');
 });
-test('A failure never starts B; lost original permission keeps my recording replayable', async t => {
-    const h = harness(t); h.engine.open(target()); await h.record(); h.engine.play('original', true);
+test('original failure never starts my recording; lost permission keeps my recording replayable', async t => {
+    const h = harness(t); h.engine.open(target()); await h.record(); h.engine.play('original');
     h.sounds[0].events.error({ code: 'BOOK_FORBIDDEN' }); t.mock.timers.tick(1000); assert.equal(h.sounds.length, 1); assert.equal(h.state.reliable, false);
     h.engine.play('mine'); assert.equal(h.sounds.at(-1).source, 'mine');
 });
-test('unreliable original never requests microphone or launches comparison', async t => {
+test('unreliable original never requests microphone or plays original', async t => {
     const h = harness(t), item = target(); item.sentence.alignment.status = 'needs_review'; h.engine.open(item);
-    await h.engine.startRecording(); h.engine.play('original', true); assert.equal(h.auth, 0); assert.equal(h.sounds.length, 0);
+    await h.engine.startRecording(); h.engine.play('original'); assert.equal(h.auth, 0); assert.equal(h.sounds.length, 0);
 });
 test('close keeps a valid pending result; interruption keeps valid fragment without automatic resume', async t => {
     const h = harness(t); h.engine.open(target()); await h.engine.startRecording(); const r = h.records[0]; r.events.start(); h.engine.close();

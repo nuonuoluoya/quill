@@ -15,6 +15,7 @@ function setup() {
         stopPlayback() { this.op++; listener?.(); },
         close() { this.op++; state.open = false; listener?.(); },
         startRecording() { starts++; },
+        stopRecording() {},
         play() { sounds++; },
         publish(value) { Object.assign(state, value); listener?.(); }
     };
@@ -27,7 +28,7 @@ function setup() {
         require(name) {
             if (name.endsWith('/shadowing')) return { shadowing: engine, shadowState: state };
             if (name.endsWith('/events')) return { subscribe(fn) { listener = fn; return () => { listener = null; }; } };
-            if (name.endsWith('/contracts')) return { timeLabel: () => '00:00' };
+            if (name.endsWith('/contracts')) return require('../utils/contracts');
             throw Error('Unexpected dependency');
         }
     });
@@ -50,6 +51,25 @@ test('opening does not request privacy; active recording waits for explicit priv
 test('already agreed privacy starts only for the active recording request', () => {
     const r = setup(); r.c.record(); r.requests[0].success({ needAuthorization: false });
     assert.equal(r.starts, 1); assert.equal(r.c.data.privacyChecking, false);
+});
+test('re-record uses existing privacy flow; cancelling query or consent preserves previous recording', () => {
+    for (const needConsent of [false, true]) {
+        const r = setup(); r.engine.publish({ hasRecording: true, duration: 3, status: 'recorded' });
+        r.c.record();
+        if (needConsent) r.requests[0].success({ needAuthorization: true });
+        r.c.finish(); r.requests[0].success({ needAuthorization: false }); r.c.privacyAgreed();
+        assert.equal(r.starts, 0); assert.equal(r.state.hasRecording, true); assert.equal(r.state.duration, 3);
+        assert.equal(r.c.data.privacyChecking, false); assert.equal(r.c.data.privacyNeeded, false);
+        r.c.mine(); assert.equal(r.sounds, 1);
+    }
+});
+test('status line shows actual source progress, unknown duration, buffering and error without fake time', () => {
+    const r = setup(); r.engine.publish({ source: 'original', sourceStatus: 'playing', currentTime: 2, sourceDuration: 5 });
+    assert.equal(r.c.data.statusText, '正在听原音 · 00:02 / 00:05');
+    r.engine.publish({ source: 'mine', sourceDuration: 0 }); assert.equal(r.c.data.statusText, '正在听我的 · 00:02 / --:--');
+    r.engine.publish({ sourceStatus: 'buffering' }); assert.equal(r.c.data.statusText, '我的录音缓冲中');
+    r.engine.publish({ sourceStatus: 'loading' }); assert.equal(r.c.data.statusText, '正在准备我的录音');
+    r.engine.publish({ error: '录音暂时无法播放，请重试或重录' }); assert.equal(r.c.data.statusText, r.state.error);
 });
 
 test('close, background and detach ignore late privacy results', () => {
