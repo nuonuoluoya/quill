@@ -7,6 +7,7 @@ const auth_1 = require("./auth");
 const http_1 = require("../utils/http");
 const { validPodcast } = require('../utils/podcast');
 const { validPreview } = require('../utils/guest-preview');
+const { playable: isPlayable } = require('../utils/contracts');
 const enc = encodeURIComponent, chapterCache = new Map();
 async function read(path) {
     try {
@@ -76,17 +77,16 @@ function checkChapter(c, b) {
             !Array.isArray(s.alignment.reasons))
             invalid();
         ids.add(s.id);
-        const can = ['verified', 'auto_passed'].includes(s.alignment.status);
-        if (can) {
-            if (!s.audioId || !Number.isFinite(s.duration) || !(s.duration > 0))
+        const can = isPlayable(s);
+        if (['verified', 'auto_passed'].includes(s.alignment.status)) {
+            if (!can)
                 invalid();
-            playable++;
         }
         else if (!['needs_review', 'unmatched', 'excluded'].includes(s.alignment.status) ||
-            s.audioId !== null ||
-            s.duration !== null ||
+            (!can && (s.audioId !== null || s.duration !== null)) ||
             !s.alignment.reasons.length)
             invalid();
+        if (can) playable++;
     }
     if (playable !== e.playableCount)
         invalid();

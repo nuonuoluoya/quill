@@ -8,10 +8,9 @@ exports.timeLabel = timeLabel;
 /** Platform-neutral HTTP contract. Never import Node/Nest/ORM here. */
 exports.speeds = [0.75, 1, 1.25, 1.5];
 const playable = (s) => {
-    var _a;
-    return (s.alignment.status === 'verified' || s.alignment.status === 'auto_passed') &&
-        !!s.audioId &&
-        ((_a = s.duration) !== null && _a !== void 0 ? _a : 0) > 0;
+    return ['verified', 'auto_passed', 'needs_review'].includes(s.alignment.status) &&
+        typeof s.audioId === 'string' && s.audioId.trim().length > 0 &&
+        Number.isFinite(s.duration) && s.duration > 0;
 };
 exports.playable = playable;
 function searchSentences(sentences, query) {

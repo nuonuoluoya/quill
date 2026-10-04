@@ -126,9 +126,17 @@ test('original failure never starts my recording; lost permission keeps my recor
     h.sounds[0].events.error({ code: 'BOOK_FORBIDDEN' }); t.mock.timers.tick(1000); assert.equal(h.sounds.length, 1); assert.equal(h.state.reliable, false);
     h.engine.play('mine'); assert.equal(h.sounds.at(-1).source, 'mine');
 });
-test('unreliable original never requests microphone or plays original', async t => {
-    const h = harness(t), item = target(); item.sentence.alignment.status = 'needs_review'; h.engine.open(item);
+test('review sentence without audio never requests microphone or plays original', async t => {
+    const h = harness(t), item = target(); item.sentence.alignment.status = 'needs_review'; item.sentence.audioId = null; item.sentence.duration = null; h.engine.open(item);
     await h.engine.startRecording(); h.engine.play('original'); assert.equal(h.auth, 0); assert.equal(h.sounds.length, 0);
+});
+
+test('review sentence with audio permits manual original and recording without promoting its review status', async t => {
+    const h = harness(t), item = target(); item.sentence.alignment = { status: 'needs_review', reasons: ['Check wording'] }; h.engine.open(item);
+    assert.equal(h.sounds.length, 0); assert.equal(h.auth, 0); assert.equal(h.state.reliable, true);
+    h.engine.play('original'); assert.equal(h.sounds[0].source, 'original');
+    await h.engine.startRecording(); assert.equal(h.sounds[0].stopped, true); assert.equal(h.auth, 1); assert.equal(h.records.length, 1);
+    assert.deepEqual(item.sentence.alignment, { status: 'needs_review', reasons: ['Check wording'] });
 });
 test('close keeps a valid pending result; interruption keeps valid fragment without automatic resume', async t => {
     const h = harness(t); h.engine.open(target()); await h.engine.startRecording(); const r = h.records[0]; r.events.start(); h.engine.close();

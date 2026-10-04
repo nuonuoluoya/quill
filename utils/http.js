@@ -53,6 +53,7 @@ function request(path, method, body, token) {
             timeout: 10000,
             header: {
                 'Content-Type': 'application/json',
+                'X-Quill-Capabilities': 'review-audio-v1',
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             success: (r) => {
