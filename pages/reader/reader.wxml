@@ -13,7 +13,7 @@
     <block wx:else>
       <view wx:for="{{rows}}" wx:key="id" id="sentence-{{item.index-1}}" class="sentence {{item.selected?'selected':''}}" data-index="{{item.index}}" bindtap="click" role="button" aria-label="第 {{item.number}} 句，{{item.available?'播放':'暂无音频'}}">
         <text class="sentence-no">{{item.number}}</text><view class="sentence-play {{item.available?'':'no-audio'}}"><q-icon wx:if="{{item.available}}" name="{{item.selected && item.playing?'pause':'play'}}" color="{{item.selected?'white':'ink'}}" size="15"/><text wx:else class="muted">—</text></view>
-        <view class="grow"><text class="sentence-text">{{item.text}}</text><view wx:if="{{!item.available}}" class="unavailable">{{item.alignment.status==='needs_review'?'待复核 · 暂无逐句音频':'暂无逐句音频'}}</view></view>
+        <view class="grow"><text class="sentence-text" user-select="{{true}}">{{item.text}}</text><view wx:if="{{!item.available}}" class="unavailable">{{item.alignment.status==='needs_review'?'待复核 · 暂无逐句音频':'暂无逐句音频'}}</view></view>
       </view>
       <view wx:if="{{!rows.length}}" class="empty">{{query?'没有找到匹配的句子':isPodcast?'当前部分暂无正文':'本章暂无正文'}}</view><button size="default" wx:if="{{more}}" class="action quiet" bindtap="more">加载更多句子</button>
     </block>
