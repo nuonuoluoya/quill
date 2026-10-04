@@ -17,11 +17,12 @@ function load(file, dependencies, globals) {
     return exports;
 }
 
-for (const support of ['global', 'legacy', 'global-failure']) {
+for (const support of ['global', 'legacy', 'global-failure', 'devtools', 'devtools-legacy', 'platform-error', 'global-throw']) {
     for (const mode of ['sentence', 'chapter']) {
         test(`${support}: ${mode} configures silent-mode playback without autoplay or background resume`, async t => {
             let app, download, globalOptions, interrupted, interruptionEnded;
             const natives = [], warnings = [];
+            const simulator = support.startsWith('devtools');
             const wx = {
                 onNetworkStatusChange() {},
                 getNetworkType(o) { o.success({ networkType: 'wifi' }); },
@@ -30,7 +31,7 @@ for (const support of ['global', 'legacy', 'global-failure']) {
                 getFileSystemManager: () => ({ unlink() {} }),
                 downloadFile(o) { download = o; return { abort() {} }; },
                 createInnerAudioContext() {
-                    if (support !== 'legacy') assert.equal(globalOptions.obeyMuteSwitch, false);
+                    if (support !== 'legacy' && !simulator) assert.equal(globalOptions.obeyMuteSwitch, false);
                     const events = {};
                     const audio = {
                         autoplay: true, obeyMuteSwitch: true, playbackRate: 1, currentTime: 0,
@@ -44,12 +45,18 @@ for (const support of ['global', 'legacy', 'global-failure']) {
                     return audio;
                 }
             };
+            if (support === 'devtools-legacy') wx.getSystemInfoSync = () => ({ platform: 'devtools' });
+            else wx.getDeviceInfo = () => {
+                if (support === 'platform-error') throw Error('device info unavailable');
+                return { platform: simulator ? 'devtools' : 'ios' };
+            };
             if (support !== 'legacy') wx.setInnerAudioOption = options => {
                 globalOptions = options;
                 assert.equal(options.obeyMuteSwitch, false);
                 assert.equal('mixWithOther' in options, false);
                 assert.equal('speakerOn' in options, false);
                 if (support === 'global-failure') options.fail({ errMsg: 'test failure' });
+                if (support === 'global-throw') throw Error('native bridge failure');
             };
             const grant = { audioId: 'a', url: 'https://audio.invalid/test.mp3', duration: 5,
                 issuedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 3600000).toISOString() };
@@ -73,7 +80,9 @@ for (const support of ['global', 'legacy', 'global-failure']) {
             player.load(book, { chapterId: 'c', chapterAudio: { status: 'available', duration: 5 },
                 sentences: [{ id: 's', audioId: 'a', duration: 5, alignment: { status: 'verified' } }] });
             assert.equal(natives.length, 0, 'app launch and content load must not create or play audio');
-            assert.equal(warnings.length, support === 'global-failure' ? 1 : 0);
+            assert.equal(warnings.length, ['global-failure', 'global-throw'].includes(support) ? 1 : 0);
+            if (simulator || support === 'legacy') assert.equal(globalOptions, undefined, 'unsupported global API must not be called');
+            assert.equal(typeof interrupted, 'function', 'audio policy failure must not interrupt app initialization');
             if (mode === 'sentence') await player.start();
             else { player.chapterPlay(); await new Promise(resolve => setImmediate(resolve)); }
             const audio = natives[0];
