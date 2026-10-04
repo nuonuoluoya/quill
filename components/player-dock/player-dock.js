@@ -52,7 +52,7 @@ Component({
             player.setContinuous(!playerState.continuous); },
         shadow() { if (!this.properties.frozen) this.triggerEvent('shadow'); },
         locate() { this.triggerEvent('locate'); },
-        speedPanel() { this.setData({ speedOpen: !this.data.speedOpen }); },
+        speedPanel() { if (!this.properties.frozen) this.setData({ speedOpen: !this.data.speedOpen }); },
         speed(e) { if (this.properties.frozen)
             return; const v = Number(e.currentTarget.dataset.value); player.setSpeed(v); this.setData({ speedOpen: false }); this.triggerEvent('speed', { speed: v }); }
     }
