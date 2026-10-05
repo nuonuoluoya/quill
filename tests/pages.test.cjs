@@ -14,6 +14,26 @@ const { selectedBook } = require('../models/context');
 const book = { bookId: 'b', buildId: 'build', textRevision: 'r', title: 'Book', chapters: [{ id: 'c', title: 'Chapter', sentenceCount: 3, playableCount: 2 }] };
 const chapter = { ...book, chapterId: 'c', chapterAudio: { status: 'unavailable', audioId: null, duration: null, reasons: ['Missing'] }, sentences: [1, 2, 3].map(index => ({ id: 's' + index, index, text: index === 3 ? 'Finding lanterns' : 'A quiet morning', audioId: index === 2 ? null : 'a' + index, duration: index === 2 ? null : 3, alignment: { status: index === 2 ? 'needs_review' : 'verified', reasons: index === 2 ? ['Review'] : [] } })) };
 const tick = () => new Promise(r => setImmediate(r));
+test('reader row and actual dock actions close swipes before playback; failures, bounds and disabled controls preserve intent',async t=>{
+    const { favorites }=require('../models/favorites'),{favoriteId,reference}=require('../utils/favorites');
+    const original={status:favorites.status,set:favorites.set,authorize:player.authorize,update:progressStore.update};let favoritesWrites=0,progressWrites=0,rejectAudio;
+    favorites.status=async()=>{for(const s of chapter.sentences){const id=favoriteId(reference(book,chapter,s));favorites.states.set(id,{favoriteId:id,saved:true});}};
+    favorites.set=async()=>{favoritesWrites++;};progressStore.update=()=>{progressWrites++;};
+    content.book=async()=>book;content.chapter=async()=>chapter;content.snapshot=async()=>book;
+    const p=page('reader');p.onLoad({bookId:'b'});p.onShow();await tick();
+    t.after(()=>{p.onUnload();favorites.status=original.status;favorites.set=original.set;player.authorize=original.authorize;progressStore.update=original.update;favorites.reset();delete global.Component;});
+    player.authorize=()=>{assert.equal(p.data.openedId,'');return new Promise((_,reject)=>{rejectAudio=reject;});};
+    const savedBefore=p.data.rows.map(r=>r.saved);p.revealFavorite({detail:{id:'s1',open:true}});p.playRow({detail:{id:'s3',index:3}});
+    assert.equal(p.data.openedId,'');assert.equal(playerState.index,2);assert.equal(playerState.status,'loading');
+    rejectAudio(Object.assign(Error('test audio unavailable'),{code:'SENTENCE_UNPLAYABLE'}));await tick();assert.equal(p.data.openedId,'');assert.equal(playerState.status,'error');
+    let definition;global.Component=value=>definition=value;const file=require.resolve('../components/player-dock/player-dock');delete require.cache[file];require(file);
+    const dock={...definition.methods,properties:{chapter,frozen:false}};
+    p.revealFavorite({detail:{id:'s3',open:true}});dock.action({currentTarget:{dataset:{action:'previous'}}});assert.equal(p.data.openedId,'');assert.equal(playerState.index,1);
+    p.revealFavorite({detail:{id:'s1',open:true}});dock.action({currentTarget:{dataset:{action:'next'}}});assert.equal(p.data.openedId,'');assert.equal(playerState.index,2);
+    p.revealFavorite({detail:{id:'s1',open:true}});const writes=progressWrites;dock.action({currentTarget:{dataset:{action:'next'}}});assert.equal(p.data.openedId,'s1');assert.equal(progressWrites,writes);
+    dock.properties.frozen=true;dock.action({currentTarget:{dataset:{action:'previous'}}});p.data.frozen=true;p.playRow({detail:{id:'s2',index:2}});assert.equal(p.data.openedId,'s1');assert.equal(playerState.index,2);
+    assert.equal(favoritesWrites,0);assert.deepEqual(p.data.rows.map(r=>r.saved),savedBefore);
+});
 test('reader favorites acknowledge writes, failure keeps star, hidden reader cannot write favorite practice progress, return restores source', async t => {
     const { favorites } = require('../models/favorites'), { favoriteId, reference } = require('../utils/favorites');
     const { createFavoritesPage } = require('../pages/favorites/view');

@@ -56,3 +56,21 @@ test('hidden page cannot navigate from a late source response; recording blocks 
  r.p.onHide();r.p.onShow();d.resolve({book:{bookId:'A',buildId:'v'},chapter:{chapterId:'c'},sentence:{id:'s'}});await work;assert.equal(r.navigation.length,0);
  await tick();r.shadowState.open=true;r.p.refresh();let deletes=0;r.service.remove=async()=>{deletes++;};await r.p.favorite({detail:{id:'a'}});assert.equal(deletes,0);
 });
+for (const action of ['play','next','previous']) {
+ test(`favorites ${action} closes the open row before delayed resolution, stays closed on failure and never writes favorites`,async t=>{
+  const r=runtime();t.after(()=>r.p.onUnload());await tick();
+  await r.p.practice.select(action==='previous'?b:a,false);r.p.practice.queue=[a,b];r.p.refresh();
+  let writes=0;r.service.remove=async()=>{writes++;return {saved:false};};
+  const pending=deferred();r.service.resolve=()=>{assert.equal(r.p.data.openedId,'');return pending.promise;};
+  r.p.reveal({detail:{id:action==='previous'?'b':'a',open:true}});
+  const before=JSON.stringify(r.p.items),work=action==='play'?r.p.play({detail:{id:'b'}}):r.p.action({detail:{action}});
+  assert.equal(r.p.data.openedId,'');assert.equal(r.p.practice.current.id,action==='previous'?'a':'b');assert.equal(r.p.data.selecting,true);
+  pending.resolve(Promise.reject(Error('test resolution failed')));await work;assert.equal(r.p.data.openedId,'');assert.ok(r.p.data.error);assert.equal(JSON.stringify(r.p.items),before);assert.equal(writes,0);
+ });
+}
+test('favorites invalid or disabled navigation keeps the open row and current selection',async t=>{
+ const r=runtime();t.after(()=>r.p.onUnload());await tick();await r.p.practice.select(a,false);r.p.practice.queue=[a,b];r.p.refresh();r.p.reveal({detail:{id:'a',open:true}});
+ r.p.action({detail:{action:'previous'}});assert.equal(r.p.data.openedId,'a');
+ r.p.play({detail:{id:'missing'}});assert.equal(r.p.data.openedId,'a');
+ r.shadowState.open=true;r.p.refresh();r.p.action({detail:{action:'next'}});r.p.play({detail:{id:'b'}});assert.equal(r.p.data.openedId,'a');assert.equal(r.p.practice.current.id,'a');
+});

@@ -22,7 +22,7 @@ Page({
     onHide() { if (this.ownsPlayer()) this.resumeIndex = playerState.index; this.favoriteRequest = (this.favoriteRequest || 0) + 1; this.favoriteWrite = (this.favoriteWrite || 0) + 1; this.setData({ openedId: '', pendingFavorite: '' }); this.active = false; this.updateRequest = (this.updateRequest || 0) + 1; if (this.updateLoadEpoch === this.epoch && this.data.busy) { this.epoch++; this.updateLoadEpoch = null; this.setData({ busy: false, error: '内容更新已取消，请重试' }); } else if (this.data.busy) { this.epoch++; this.needsIdentityLoad = true; this.setData({ busy: false }); } if (this.ownsPlayer()) { shadowing.interrupt(); player.setForeground(false); } progressStore.flushAll(); clearInterval(this.timer); },
     onUnload() { const owns = this.ownsPlayer(); this.alive = false; this.active = false; if (owns) { shadowing.reset(); player.onSelection = () => {}; player.onEnded = null; player.dispose(); } if (wx.offNetworkStatusChange) wx.offNetworkStatusChange(this.networkChange); this.epoch++; clearInterval(this.timer); this.off(); this.identityOff(); progressStore.flushAll(); },
     ownsPlayer() { return player.onSelection === this.selection && !!this.selection; },
-    bindSelection() { this.selection = i => { if (!this.active || !this.alive || !this.ownsPlayer()) return; this.resumeIndex = i; this.save(i); if (!this.userScrolled) this.locate(); }; player.onSelection = this.selection; },
+    bindSelection() { this.selection = i => { if (!this.active || !this.alive || !this.ownsPlayer()) return; this.closeFavorite(); this.resumeIndex = i; this.save(i); if (!this.userScrolled) this.locate(); }; player.onSelection = this.selection; },
     async refreshFavorites(retried = false) {
         const b = this.data.book, c = this.data.chapter, epoch = this.epoch;
         if (!b || !c || !this.active) return;
@@ -144,8 +144,10 @@ Page({
     manualScroll() { this.userScrolled = true; },
     locate() { this.userScrolled = false; this.limit = Math.max(this.limit, playerState.index + 15); this.setData({ query: '', target: '' }); this.refresh(); wx.nextTick(() => { if (this.alive)
         this.setData({ target: 'sentence-' + playerState.index }); }); },
-    click(e) { if (this.data.frozen)
-        return; player.clickSentence(Number(e.currentTarget.dataset.index) - 1); },
+    click(e) { if (this.data.frozen || shadowState.open) return;
+        const index = Number(e.currentTarget.dataset.index) - 1;
+        if (!this.data.chapter?.sentences[index]) return;
+        this.closeFavorite(); player.clickSentence(index); },
     changeSpeed() { this.save(); },
     openShadowing() {
         if (this.data.frozen || playerState.mode !== 'sentence' || !this.data.book || !this.data.chapter) return;

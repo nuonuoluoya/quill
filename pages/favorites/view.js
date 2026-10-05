@@ -50,7 +50,7 @@ function createFavoritesPage(service) {
     clearSearch() { this.search({ detail: { value: '' } }); },
     reveal(e) { if (!this.data.frozen) this.setData({ openedId: e.detail.open ? e.detail.id : '' }); },
     closeSwipe() { if (this.data.openedId) this.setData({ openedId: '' }); },
-    play(e) { if (this.data.frozen) return; this.closeSwipe(); const item = this.items.find(row => row.id === e.detail.id); if (item) return this.practice.choose(item, this.items); },
+    play(e) { if (this.data.frozen) return; const item = this.items.find(row => row.id === e.detail.id); if (item?.available) { this.closeSwipe(); return this.practice.choose(item, this.items); } },
     async favorite(e) {
       if (this.data.frozen || this.data.pendingId) return;
       const item = this.items.find(row => row.id === e.detail.id); if (!item) return;
@@ -65,8 +65,11 @@ function createFavoritesPage(service) {
     action(e) {
       if (this.data.frozen || this.practice.loading || !this.practice.target) return;
       const a = e.detail.action;
-      if (a === 'previous') return this.practice.navigate(-1);
-      if (a === 'next') return this.practice.navigate(1);
+      if (a === 'previous' || a === 'next') {
+        const delta = a === 'previous' ? -1 : 1, index = this.practice.index();
+        if (index < 0 || !this.practice.queue[index + delta]) return;
+        this.closeSwipe(); return this.practice.navigate(delta);
+      }
       if (a === 'toggle') { if (playerState.status === 'playing' || playerState.status === 'loading') player.pause(); else return this.practice.resume(); }
       if (a === 'loop') player.setLoop(!playerState.loop);
       if (a === 'continuous') player.setContinuous(!playerState.continuous);
