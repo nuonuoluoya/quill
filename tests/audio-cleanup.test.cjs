@@ -18,7 +18,7 @@ const a = 'wxfile://tmp_a.mp3', b = 'http://tmp/b.mp3';
 test('audio cleanup only touches its file index and owned files; every progress queue and preference remains intact', async () => {
     const retained = { session: { token: 'isolated' }, globalSpeed: 1.5,
         progress: { dirty: true, inflight: { kind: 'put', body: { clientMutationId: 'pending' } }, preferredSpeed: 0.75 },
-        otherAccount: { progress: 12 }, otherVersion: { progress: 7 } };
+        otherAccount: { progress: 12 }, otherVersion: { progress: 7 }, favorites: { schema: 1, version: 4, items: [{ favoriteId: 'saved' }] } };
     const storage = new Map(Object.entries(structuredClone(retained))), deleted = [];
     const api = { getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, structuredClone(v)),
         getFileSystemManager: () => ({ unlink(o) { deleted.push(o.filePath); o.success(); } }) };

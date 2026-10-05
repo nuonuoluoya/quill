@@ -64,7 +64,7 @@ function readerRuntime() {
         '../../utils/podcast': require('../utils/podcast'), '../../utils/events': { subscribe: () => () => {} },
         '../../utils/http': { message: e => e.message }, '../../utils/guest-preview': {},
         '../../models/shadowing': { shadowing: { close() {}, reset() {}, interrupt() {}, resume() {} }, shadowState: {} },
-        '../../models/audio-cleanup': { cleanupState: {} }
+        '../../models/audio-cleanup': { cleanupState: {} }, '../../models/favorites': { favorites: { states: new Map(), status: async () => [], revision: 0 } }, '../../utils/favorites': require('../utils/favorites')
     };
     return { content, player, playerState, selectedBook, get disposed() { return disposed; },
         create(id) { const p = page('pages/reader/reader.js', deps, { wx: { nextTick: fn => fn() } }); p.onLoad({ bookId: id }); return p; } };
@@ -78,12 +78,17 @@ test('unloaded reader update cannot stop the newly opened reader or write old pa
     assert.equal(r.playerState.status, 'playing'); assert.equal(r.player.book.bookId, 'B');
     assert.equal(r.selectedBook.value.bookId, 'B'); assert.equal(r.disposed, disposed); assert.equal(a.writes, writes); b.onUnload();
 });
+test('reader hidden during initial load retries on return and never loads the hidden player',async()=>{
+    const r=readerRuntime(),pending=deferred();r.content.book=()=>pending.promise;
+    const p=r.create('A');p.onHide();pending.resolve(book('A'));await tick();assert.equal(p.data.chapter,null);
+    r.content.book=async id=>book(id);p.onShow();await tick();assert.equal(p.data.chapter.chapterId,'c');assert.equal(p.data.busy,false);p.onUnload();
+});
 for (const change of ['identity-or-chapter', 'hide-and-return', 'newer-update']) {
     test(`reader update ignores stale lookup after ${change}`, async () => {
         const r = readerRuntime(), p = r.create('A'); await tick(); const pending = deferred();
         r.content.book = () => pending.promise; const old = p.updateContent();
         if (change === 'identity-or-chapter') p.epoch++;
-        if (change === 'hide-and-return') { p.onHide(); p.onShow(); }
+        if (change === 'hide-and-return') { p.onHide(); p.onShow(); await tick(); }
         if (change === 'newer-update') { r.content.book = async () => book('A'); await p.updateContent(); }
         const disposed = r.disposed, writes = p.writes; r.playerState.status = 'playing';
         pending.resolve({ ...book('A'), textRevision: 'old-response' }); await old;

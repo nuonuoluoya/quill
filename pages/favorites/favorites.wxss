@@ -1,0 +1,8 @@
+.favorites-page{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.favorites-top{padding:0 18px 12px;flex-shrink:0}.favorites-top .title{font-size:44px;margin:12px 0 18px;font-weight:600}
+.summary{display:flex;justify-content:space-between;gap:12px;align-items:center;font-family:"Times New Roman","Songti SC",SimSun,serif;font-size:18px;margin-bottom:16px}.sort{font-family:-apple-system,sans-serif;font-size:14px;white-space:nowrap}
+.search{height:42px;padding:9px 14px;display:flex;align-items:center;gap:12px;background:#EEEDEB;border-radius:9px}.search input{flex:1;font-size:16px;min-width:0;line-height:24px;height:24px}
+.favorite-list{flex:1;min-height:0;height:0}.favorites-page q-player-dock,.favorites-page q-nav{flex-shrink:0}
+.empty-state{padding:50px 24px 24px;text-align:center;font-size:14px}.empty-title{font-size:25px;margin:18px 0 12px}.retry{margin:16px 20px 24px;width:calc(100% - 40px)}
+.favorites-top .status{margin:8px 0 0}.favorites-top .notice{margin-bottom:0}
+@media(max-width:360px){.favorites-top{padding-left:16px;padding-right:16px}.favorites-top .title{font-size:39px}.summary{font-size:16px}}

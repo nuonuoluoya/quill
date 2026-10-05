@@ -13,7 +13,7 @@ const initialPlayer = () => ({
     speedSupported: true,
     loop: false,
     continuous: false,
-    error: '',
+    error: '', errorCode: '',
     buffering: false,
 });
 exports.initialPlayer = initialPlayer;
@@ -78,6 +78,7 @@ class Player {
         this.state.continuous = false;
         this.state.currentTime = 0;
         this.state.status = 'selected';
+        this.state.error = ''; this.state.errorCode = '';
     }
     setForeground(value) {
         this.foreground = value;
@@ -128,7 +129,7 @@ class Player {
         this.state.index = index;
         this.state.currentTime = 0;
         this.state.duration = this.chapter.sentences[index].duration || 0;
-        this.state.error = '';
+        this.state.error = ''; this.state.errorCode = '';
         this.state.status = (0, contracts_1.playable)(this.chapter.sentences[index]) ? 'selected' : 'unavailable';
         this.onSelection(index);
         if (play && this.state.status !== 'unavailable')
@@ -158,7 +159,7 @@ class Player {
             loop: false,
             continuous: false,
             status: 'selected',
-            error: '',
+            error: '', errorCode: '',
         });
         void this.start();
     }
@@ -222,7 +223,7 @@ class Player {
         this.destroy();
         const gen = this.generation;
         this.state.status = 'loading';
-        this.state.error = '';
+        this.state.error = ''; this.state.errorCode = '';
         this.offset = offset;
         this.phaseDeadline = this.now() + 25000;
         const valid = () => gen === this.generation && this.intent === intent && this.allowed && this.foreground;
@@ -322,6 +323,8 @@ class Player {
                 this.state.buffering = false;
                 this.state.currentTime = grant.duration;
                 this.allowed = false;
+                // A collection can handle the boundary while retaining real source identities.
+                if (mode === 'sentence' && this.onEnded && this.onEnded()) return;
                 if (mode === 'sentence' && this.state.loop) {
                     this.state.currentTime = 0;
                     void this.start();
@@ -344,11 +347,11 @@ class Player {
                     'SESSION_EXPIRED',
                     'SENTENCE_UNPLAYABLE',
                     'CHAPTER_AUDIO_UNAVAILABLE',
-                ].includes(code));
+                ].includes(code), code);
             }
         }
     }
-    failure(message, retry = true) {
+    failure(message, retry = true, code = '') {
         if (!this.allowed)
             return;
         if (this.state.status === 'playing')
@@ -356,7 +359,7 @@ class Player {
         this.destroy();
         this.grant = undefined;
         this.state.status = 'error';
-        this.state.error = message;
+        this.state.error = message; this.state.errorCode = code;
         this.state.loop = false;
         this.state.continuous = false;
         if (retry && this.retries++ < 1 && this.foreground && this.now() - this.waitStarted < 60000) {

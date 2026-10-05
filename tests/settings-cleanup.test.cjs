@@ -5,7 +5,7 @@ const { SyncRecord } = require('../core/sync');
 const tick = () => new Promise(r => setImmediate(r));
 function runtime(member = false, transportOverride) {
     const auth = { session: member ? {} : null, epoch: 1 }, selectedBook = { value: { bookId: 'b', buildId: 'build', textRevision: 'r', title: 'Real book title', contentType: 'book' } };
-    const cache = new Map([['globalSpeed', 1.5], ['otherAccount', { dirty: true }]]), records = new Map(), resets = [], forgotten = [];
+    const cache = new Map([['globalSpeed', 1.5], ['otherAccount', { dirty: true }], ['favorites', { schema: 1, version: 4, items: [{ favoriteId: 'saved' }] }]]), records = new Map(), resets = [], forgotten = [];
     let uid = 0, definition, clears = 0, disposed = 0, finishAudio, failSave = false;
     const identity = () => auth.session ? 'member' : 'guest';
     const transport = member ? transportOverride || { get: async () => ({ version: 1, progress: null }), reset: async (id, body) => {
@@ -47,7 +47,7 @@ test('guest reset is scoped to current content version and preserves global spee
     r.p.cancelConfirm(); assert.ok(record.state.progress);
     r.p.clear(); await r.p.confirmAction(); assert.equal(record.state.progress, null); assert.equal(record.state.dirty, false);
     assert.deepEqual(other.state, otherBefore); assert.equal(r.cache.get('globalSpeed'), 1.5);
-    assert.deepEqual(r.cache.get('otherAccount'), { dirty: true }); assert.equal(r.resets.length, 0);
+    assert.deepEqual(r.cache.get('favorites'), { schema: 1, version: 4, items: [{ favoriteId: 'saved' }] }); assert.deepEqual(r.cache.get('otherAccount'), { dirty: true }); assert.equal(r.resets.length, 0);
     assert.match(r.p.data.resetResult, /游客进度已重置/); assert.equal(r.p.data.speed, 1.5);
 });
 test('member confirmation exposes pending work and sends one version-scoped idempotent reset', async () => {

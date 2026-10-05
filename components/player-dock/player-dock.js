@@ -2,7 +2,8 @@ const { player, playerState } = require('../../models/player');
 const { speeds, timeLabel } = require('../../utils/contracts');
 const { subscribe } = require('../../utils/events');
 Component({
-    properties: { chapter: Object, title: String, frozen: Boolean, isPodcast: Boolean },
+    properties: { chapter: Object, title: String, frozen: Boolean, isPodcast: Boolean, isFavorites: Boolean, queueIndex: Number, queueTotal: Number },
+    observers: { 'queueIndex, queueTotal': function () { if (this.alive) this.refresh(); } },
     data: { state: {}, speeds, speedOpen: false, percent: 0, current: '00:00', duration: '00:00', loadingModal: false, loadingKind: 'loading' },
     lifetimes: {
         attached() { this.alive = true; this.visible = true; this.off = subscribe(() => this.refresh()); this.refresh(); },
@@ -13,7 +14,7 @@ Component({
         hide() { this.visible = false; this.clearLoading(); }
     },
     methods: {
-        refresh() { const s = playerState; this.setData({ state: { ...s }, percent: s.duration ? Math.min(100, s.currentTime / s.duration * 100) : 0, current: timeLabel(s.currentTime), duration: timeLabel(s.duration), number: String(s.index + 1), total: String((this.properties.chapter.sentences || []).length) }); this.updateLoading(s); },
+        refresh() { const s = playerState, index = this.properties.isFavorites ? this.properties.queueIndex : s.index, total = this.properties.isFavorites ? this.properties.queueTotal : (this.properties.chapter?.sentences || []).length; this.setData({ state: { ...s, index }, percent: s.duration ? Math.min(100, s.currentTime / s.duration * 100) : 0, current: timeLabel(s.currentTime), duration: timeLabel(s.duration), number: String(index + 1), total: String(total) }); this.updateLoading(s); },
         updateLoading(s) {
             const waiting = !s.error && (s.status === 'loading' || (s.status === 'playing' && s.buffering));
             if (!this.alive || !this.visible || !waiting) { this.clearLoading(); return; }
@@ -42,7 +43,7 @@ Component({
         cancelLoading() { this.clearLoading(); player.pause(); },
         preventMove() {},
         action(e) { if (this.properties.frozen)
-            return; const a = e.currentTarget.dataset.action; if (a === 'previous')
+            return; const a = e.currentTarget.dataset.action; if (this.properties.isFavorites) { this.triggerEvent('action', { action: a }); return; } if (a === 'previous')
             player.navigate(-1); if (a === 'next')
             player.navigate(1); if (a === 'toggle')
             player.toggle(); if (a === 'restart')

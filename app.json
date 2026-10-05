@@ -4,7 +4,8 @@
     "pages/book/book",
     "pages/reader/reader",
     "pages/settings/settings",
-    "pages/privacy/privacy"
+    "pages/privacy/privacy",
+    "pages/favorites/favorites"
   ],
   "window": {
     "navigationBarTitleText": "Quill · 英文听读",

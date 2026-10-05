@@ -20,6 +20,7 @@ function runtime(name) {
     '../../models/player': { player: {} }, '../../utils/contracts': { speeds: [1] },
     '../../models/shadowing': { shadowing: {}, shadowState: { open: false } },
     '../../models/audio-cleanup': { cleanupState: { busy: false, result: '' } },
+    '../../models/favorites': { favorites: { states: new Map() } }, '../../utils/favorites': require('../utils/favorites'),
     '../../utils/events': { subscribe: () => () => {} },
     '../../utils/http': { message: e => e.message, toLibrary: () => navigation.push('/pages/library/library'), navigate: url => navigation.push(url) },
     '../../utils/guest-preview': require('../utils/guest-preview'), '../../utils/catalog': require('../utils/catalog'),

@@ -19,7 +19,7 @@ const resetResult = (r, b) => {
     return auth.session ? '当前内容版本的本机与云端进度已重置' : '此设备上的游客进度已重置';
 };
 Page({
-    data: { loggedIn: false, consent: false, busy: false, error: '', book: null, position: '', status: '', speed: 1, speeds, hasReturnChapter: false, confirmKind: '', confirmTitle: '', confirmLoggedIn: false, confirmPending: false, confirmIsBook: false, audioBusy: false, audioResult: '', resetResult: '' },
+    data: { favoritesEnabled: true, loggedIn: false, consent: false, busy: false, error: '', book: null, position: '', status: '', speed: 1, speeds, hasReturnChapter: false, confirmKind: '', confirmTitle: '', confirmLoggedIn: false, confirmPending: false, confirmIsBook: false, audioBusy: false, audioResult: '', resetResult: '' },
     onLoad(q = {}) { this.alive = true; this.returnChapterId = q.returnBookId === FULL_BOOK_ID && typeof q.returnChapterId === 'string' ? q.returnChapterId : ''; this.setData({ hasReturnChapter: !!this.returnChapterId }); this.off = subscribe(() => this.refresh()); },
     onShow() { this.visible = true; this.refresh(); if (auth.session && this.returnChapterId && !this.returnAttempted) { this.returnAttempted = true; this.resumeRequested(); } },
     onHide() { this.visible = false; this.chapterRequest = (this.chapterRequest || 0) + 1; if (this.loginOperation) this.loginOperation.cancelled = true; if (!this.data.busy && !cleanupState.busy) this.cancelConfirm(); },

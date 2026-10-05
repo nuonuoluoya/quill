@@ -8,7 +8,8 @@
     "q-icon": "/components/icon/icon",
     "q-sheet": "/components/sheet/sheet",
     "q-conflict": "/components/conflict/conflict",
-    "q-nav": "/components/nav/nav"
+    "q-nav": "/components/nav/nav",
+    "q-sentence-row": "/components/sentence-row/sentence-row"
   },
   "navigationStyle": "custom",
   "backgroundColor": "#F9F8F5"

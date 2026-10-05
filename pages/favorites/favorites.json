@@ -1,0 +1,1 @@
+{"navigationBarTitleText":"我的收藏","navigationStyle":"custom","disableScroll":true,"backgroundColor":"#F9F8F5","usingComponents":{"q-nav":"/components/nav/nav","q-icon":"/components/icon/icon","q-sentence-row":"/components/sentence-row/sentence-row","q-player-dock":"/components/player-dock/player-dock","q-shadowing":"/components/shadowing/shadowing"}}

@@ -15,4 +15,4 @@ exports.player = new player_1.Player(exports.playerState, ({ mode }) => {
     audio.obeyMuteSwitch = false;
     return mode === 'sentence' ? sentenceAudio(wx, audio, audioFiles(wx)) : audio;
 }, content_1.content.playback);
-(0, auth_1.onIdentityChange)(() => exports.player.dispose());
+(0, auth_1.onIdentityChange)(() => { exports.player.dispose(); exports.player.book = null; exports.player.chapter = null; });
