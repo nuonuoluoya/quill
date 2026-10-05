@@ -1438,7 +1438,7 @@ HTTP契约（均Bearer当前会话，沿用data/requestId及error/requestId封�
 - DELETE /v1/me/favorites/:favoriteId，200。body={clientMutationId,clientMutationCreatedAt}。只按当前账号删除，不要求仍有内容权限；不存在同样成功且不泄露他人记录。
 - 写响应data={favoriteId,saved:boolean,favoritedAt:ISO|null,version:number}。favoriteId为SHA256(JSON.stringify([bookId,textRevision,chapterId,sentenceId]))；所有数据库查询必须同时限定user_id，哈希不可替代账号授权，并检查存储的四字段一致。重复添加不更新时间/位置；重复删除不报错；删除后重新添加才获得新时间。
 - GET /v1/me/favorites?limit=20&q=...&cursor=...，200。data={items,nextCursor:string|null,version,totalCount,matchedCount,playableCount}。limit为1～50，q去首尾空白后0～100字符；按全账号当前有权正文不区分大小写的字面子串搜索，百分号/下划线不作为通配符。按added_version倒序keyset分页；游标HMAC绑定账号、q、能力模式、lastAddedVersion与首屏账户version，收藏version变化409 FAVORITES_CHANGED，前端清页重取；畸形/错作用域游标400 INVALID_REQUEST。
-- totalCount为账号全部收藏含失效；matchedCount为完整搜索结果数；playableCount为完整搜索结果中当前有权、版本相符、按能力标识具有有效音频元数据的数量。q空时matchedCount=totalCount；q非空仅搜索当前available正文，不以失权/旧版本的搜索命中泄露原文。页面不以当页长度冒充总数。默认显示总收藏/可播放，搜索显示匹配/匹配可播放。
+- totalCount为账号全部收藏含失效；matchedCount为完整搜索结果数；playableCount为完整搜索结果中当前有权、版本相符、按能力标识具有有效音频元数据的数量。q空时matchedCount=totalCount；q非空仅搜索当前available正文，不以失权/旧版本的搜索命中泄露原文。页面不以当页长度冒充总数。收藏页顶部仅显示“{playableCount} 句可播放”；搜索时该数字为当前完整搜索结果内的可播放数，不显示总收藏数或匹配总数。
 - POST /v1/me/favorites/status，显式200。body={bookId,textRevision,sourceBuildId,chapterId,sentenceIds:[...]}，1～200个不重复句ID，验证可读章/正文/句归属，批量返回data={states:[{sentenceId,favoriteId,saved}],version}。长章分批，失败不阻断正文呈现，也不能将未知状态当作确定未收藏。
 - GET /v1/me/favorites/:favoriteId，200返回实时FavoriteItem；当前账号无该记录404 FAVORITE_NOT_FOUND。主动播放/定位前重新解析，再调用既有源内容playback接口签发音频；该接口继续真实鉴权。版本不变不能作为授权仍有效的依据。
 - FavoriteItem固定字段：{favoriteId,favoritedAt,status,reference,resolvedBuildId,sentence,source,playable}。status为available/forbidden/text_revision_changed/content_unavailable。available时reference={bookId,textRevision,chapterId,sentenceId}，sentence沿用既有Sentence DTO；source={bookTitle,chapterTitle,contentType,seasonTitle:null|string,episodeTitle:null|string,episodeNumber:null|number,part:null|dialogue|lesson}。available可无音频，playable=false但正文可见。其余状态reference/resolvedBuildId/sentence/source均null，playable=false；只保留favoriteId、时间、状态供取消。鉴权先于版本判断，失权不得借状态暴露内容版本。
@@ -1511,3 +1511,9 @@ HTTP契约（均Bearer当前会话，沿用data/requestId及error/requestId封�
 - 正常收起只发生一次，后续scroll和touchend不得重新展开或反复重启动画。已闭合句子仍不因纵向/斜向/右向偏移产生横向位移；保留纵向锁定、横向候选取消、滚动代次取消候选及迟到展开拦截，不能为恢复动画回退此前防抖修复。
 - 保留滚动流畅、长按复制及拖动尾tap抑制、星标新点击、切换其他句收起和收藏数据行为。实现仅移除不必要的动画禁用样式/呈现状态；若scrollEpoch仍承担手势取消职责应保留，不能连同防误触状态一起删除。
 - 验收两页：先明确左划展开，再纵向滚动，确认正常时长的transform过渡和最终闭合，后续scroll/touchend不重开；闭合行纵向及先短横后纵等既有复现序列不误展开；星标及播放仍正常。原生工具验证过渡属性、起终位置及可采样中间态，未捕获动画帧不得将仅最终位置当作动画已见证。更新README/规格快照、适当检查后提交推送，不上传或发布。
+
+### 我的收藏精简顶部统计文案（2026-10-05）
+
+- 按用户要求，将“我的收藏”顶部“{total} 句 · {playableCount} 句可播放”改为仅“{playableCount} 句可播放”，同时去掉前段总数、单位及中间分隔点；保留右侧“最近收藏”及现有布局。
+- 未搜索时显示全部收藏中的可播放数，搜索时显示完整搜索结果中的可播放数，零值显示“0 句可播放”。沿用现有统计来源，不以当前页条数代替；不改接口字段、分页/空态判定或底栏队列计数。
+- 验收：检查模板/组件依赖及正常、搜索、零值呈现，无残留总数或分隔点；纯文案修改不新增镜像实现测试。运行相关静态/发布检查，README与规格快照同步后仅提交相关变更并推送，不上传/发布小程序。
