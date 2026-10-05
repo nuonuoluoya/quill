@@ -3,6 +3,10 @@ const PAGE_SIZE = 20;
 
 function validPodcast(book) {
   if (!Array.isArray(book.episodes) || (book.seasons || []).length) return false;
+  const declared = book.podcastParts === undefined ? PARTS.map(p => p.value) : book.podcastParts;
+  if (!Array.isArray(declared) || !declared.length) return false;
+  const ordered = PARTS.filter(p => declared.includes(p.value)).map(p => p.value);
+  if (declared.length !== ordered.length || declared.some((value, i) => value !== ordered[i])) return false;
   const ids = new Set(), numbers = new Set(), parts = new Set(), populated = new Set();
   for (const episode of book.episodes) {
     if (!episode || typeof episode.id !== 'string' || !episode.id || ids.has(episode.id) ||
@@ -12,7 +16,7 @@ function validPodcast(book) {
   }
   for (const chapter of book.chapters) {
     const key = JSON.stringify([chapter.episodeId, chapter.part]);
-    if (!ids.has(chapter.episodeId) || !PARTS.some(p => p.value === chapter.part) || parts.has(key) ||
+    if (!ids.has(chapter.episodeId) || !declared.includes(chapter.part) || parts.has(key) ||
         chapter.seasonId != null || chapter.episodeNumber != null) return false;
     parts.add(key); populated.add(chapter.episodeId);
   }
@@ -25,6 +29,7 @@ function episodeFor(book, chapterId) {
 }
 
 function podcastEpisodes(book) {
+  const programParts = book.podcastParts === undefined ? PARTS : PARTS.filter(p => book.podcastParts.includes(p.value));
   const byEpisode = new Map();
   for (const chapter of book.chapters || []) {
     if (!byEpisode.has(chapter.episodeId)) byEpisode.set(chapter.episodeId, new Map());
@@ -32,7 +37,7 @@ function podcastEpisodes(book) {
   }
   return (book.episodes || []).slice().sort((a, b) => a.number - b.number).map(episode => ({
     ...episode,
-    parts: PARTS.map(part => {
+    parts: programParts.map(part => {
       const chapter = byEpisode.get(episode.id)?.get(part.value);
       return { key: part.value, label: part.label, chapterId: chapter ? chapter.id : '',
         available: !!chapter, sentenceCount: chapter ? chapter.sentenceCount : 0,

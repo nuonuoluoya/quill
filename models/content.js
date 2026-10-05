@@ -46,6 +46,7 @@ function checkBook(b) {
         ids.add(c.id);
     }
     if (b.contentType === 'podcast' && !validPodcast(b)) invalid();
+    if (b.contentType !== 'podcast' && b.podcastParts !== undefined) invalid();
     if (!validPreview(b)) invalid();
     return b;
 }

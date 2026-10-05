@@ -17,4 +17,15 @@ function chapter(book, id) {
       { id: id + '-s2', index: 2, text: 'A sentence awaiting review.', audioId: null, duration: null, alignment: { status: 'needs_review', reasons: ['Review required'] } }
     ] };
 }
-module.exports = { podcast, chapter };
+function singleLessonPodcast() {
+  // Original fixture text with the source's sparse episode numbers; no production body/audio.
+  const missing = new Set([423, 445, 446, 447, 488, 546, 576, 646]);
+  const episodes = Array.from({ length: 716 }, (_, i) => i + 1).filter(n => !missing.has(n))
+    .map(number => ({ id: 'ep' + String(number).padStart(4, '0'), number, title: 'Practice Lesson ' + number }));
+  return { bookId: 'single-lesson-fixture', buildId: 'lesson-v1', textRevision: 'lesson-r1', title: 'Single Lesson Podcast',
+    language: 'en', visibility: 'private', contentScope: 'sample', contentType: 'podcast', podcastParts: ['lesson'],
+    episodeCount: episodes.length, unitCount: episodes.length, chapterCount: episodes.length,
+    chapterAudioAvailableCount: 0, contentChapterCount: episodes.length, episodes,
+    chapters: episodes.map(e => ({ id: e.id + '-lesson', episodeId: e.id, part: 'lesson', title: e.title, sentenceCount: 2, playableCount: 1 })) };
+}
+module.exports = { podcast, singleLessonPodcast, chapter };

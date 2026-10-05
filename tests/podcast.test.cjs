@@ -1,6 +1,6 @@
 const { test, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { podcast, chapter } = require('./fixtures/podcast.cjs');
+const { podcast, singleLessonPodcast, chapter } = require('./fixtures/podcast.cjs');
 const { validPodcast, podcastEpisodes, findEpisodes } = require('../utils/podcast');
 const { catalog, unitTitle } = require('../utils/catalog');
 const { TYPES, present, recentPosition } = require('../utils/library-presentation');
@@ -84,6 +84,67 @@ test('365 episodes paginate at 20; eight missing parts remain visible and cannot
   c.properties.activeChapterId = 'ep100-dg'; c.sync(); assert.equal(c.data.page, 1, 'late progress must not overwrite browsing');
   c.properties.book = null; c.sync(); assert.equal(c.data.rows.length, 0, 'identity reset clears prior program');
   assert.deepEqual(findEpisodes(all, 'ep032').map(e => e.number), [32]);
+});
+
+test('single-lesson declaration shows only real lessons without inferring parts from chapters', () => {
+  const book = singleLessonPodcast(); assert.equal(checkBook(book), book);
+  const rows = podcastEpisodes(book); assert.equal(rows.length, 708);
+  assert.ok(rows.every(e => e.parts.length === 1 && e.parts[0].key === 'lesson' && e.parts[0].available));
+  const legacy = { ...book }; delete legacy.podcastParts;
+  assert.equal(checkBook(legacy), legacy);
+  assert.ok(podcastEpisodes(legacy).every(e => e.parts.length === 2 && e.parts[0].available === false));
+  const explicitDual = { ...legacy, podcastParts: ['dialogue', 'lesson'] };
+  assert.deepEqual(podcastEpisodes(explicitDual), podcastEpisodes(legacy));
+  const dialogueOnly = { ...book, podcastParts: ['dialogue'], chapters: book.chapters.map(c => ({ ...c, part: 'dialogue' })) };
+  assert.equal(checkBook(dialogueOnly), dialogueOnly);
+  assert.ok(podcastEpisodes(dialogueOnly).every(e => e.parts.length === 1 && e.parts[0].key === 'dialogue'));
+});
+
+test('podcast part declarations reject invalid shape, order, duplicates and undeclared chapter parts', () => {
+  for (const podcastParts of [null, [], 'lesson', {}, ['other'], ['lesson', 'lesson'], ['lesson', 'dialogue'], ['dialogue', 'lesson', 'other']]) {
+    const bad = { ...singleLessonPodcast(), podcastParts };
+    assert.equal(validPodcast(bad), false); assert.throws(() => checkBook(bad), /内容格式不一致/);
+  }
+  const bad = singleLessonPodcast(); bad.chapters[0].part = 'dialogue';
+  assert.equal(validPodcast(bad), false); assert.throws(() => checkBook(bad), /内容格式不一致/);
+  for (const contentType of ['book', 'tv', 'movie', 'blog', undefined])
+    assert.throws(() => checkBook({ ...singleLessonPodcast(), contentType }), /内容格式不一致/);
+});
+
+test('708 sparse episodes stay at 20 per render; searching and saved position preserve original episode numbers', () => {
+  const c = component(singleLessonPodcast(), 'ep0716-lesson');
+  assert.equal(c.data.page, 35); assert.equal(c.data.pageCount, 36); assert.equal(c.data.rows.length, 8);
+  assert.equal(c.data.expandedId, 'ep0716'); assert.equal(c.data.rows.at(-1).number, 716);
+  c.select(click('ep0716-dialogue')); assert.equal(c.events.length, 0);
+  c.select(click('ep0716-lesson')); assert.equal(c.events[0].data.chapterId, 'ep0716-lesson');
+  for (const query of ['0716', 'ep0716', '第716期', 'Practice Lesson 716']) {
+    c.search({ detail: { value: query } }); assert.equal(c.data.rows.length, 1); assert.equal(c.data.rows[0].number, 716);
+  }
+  for (const n of [423, 445, 446, 447, 488, 546, 576, 646]) {
+    c.search({ detail: { value: String(n) } }); assert.equal(c.data.rows.length, 0);
+  }
+  c.clearSearch(); const numbers = [];
+  for (let page = 0; page < 36; page++) {
+    assert.ok(c.data.rows.length <= 20); numbers.push(...c.data.rows.map(e => e.number));
+    c.turn({ currentTarget: { dataset: { delta: 1 } } });
+  }
+  assert.equal(numbers.length, 708); assert.equal(new Set(numbers).size, 708); assert.equal(numbers.at(-1), 716);
+  assert.ok(c.data.rows.every(e => e.parts.length === 1));
+});
+
+test('single-lesson directory and reader picker restore the precise lesson without a phantom dialogue', async () => {
+  const book = singleLessonPodcast(); setup(book);
+  progressStore.get(book).state.progress = { bookId: book.bookId, sourceBuildId: book.buildId, textRevision: book.textRevision,
+    chapterId: 'ep0716-lesson', sentenceId: 'ep0716-lesson-s1', preferredSpeed: 1 };
+  const directory = page('book'); directory.onLoad({ bookId: book.bookId }); await tick();
+  const index = component(directory.data.book, directory.data.podcastChapterId);
+  assert.equal(index.data.page, 35); assert.equal(index.data.rows.at(-1).parts.length, 1);
+  directory.continueReading(); assert.match(navigation.at(-1), /chapterId=ep0716-lesson&sentenceId=ep0716-lesson-s1$/);
+  const reader = page('reader'); reader.onLoad({ bookId: book.bookId, buildId: book.buildId, chapterId: 'ep0716-lesson', sentenceId: 'ep0716-lesson-s1' }); await tick();
+  assert.equal(reader.data.book.podcastParts[0], 'lesson'); assert.equal(reader.data.chapterLabel, '第 716 期 · 教学');
+  reader.showChapters(); const picker = component(reader.data.book, reader.data.chapter.chapterId);
+  assert.equal(picker.data.expandedId, 'ep0716'); assert.equal(picker.data.rows.at(-1).parts.length, 1);
+  assert.equal(player.audio, null); assert.equal(playerState.status, 'selected');
 });
 
 test('directory restores saved part and blocks missing IDs without creating audio', async () => {
