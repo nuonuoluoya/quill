@@ -30,13 +30,13 @@ test('clear horizontal gestures change state once, final drift invalidates, and 
 });
 function component(){
  let definition;vm.runInNewContext(fs.readFileSync('components/sentence-row/sentence-row.js','utf8'),{require:()=>({SentenceSwipe}),Component:d=>definition=d});
- const events=[],c={...definition.methods,properties:{item:{id:'s',index:1,available:true,saved:true},opened:false},data:{scrolling:false},setData(v){Object.assign(this.data,v);},triggerEvent(name,detail){events.push({name,detail});}};
+ const events=[],c={...definition.methods,properties:{item:{id:'s',index:1,available:true,saved:true},opened:false},triggerEvent(name,detail){events.push({name,detail});}};
  definition.lifetimes.attached.call(c);return {c,events,scroll(){definition.observers.scrollEpoch.call(c);}};
 }
 test('scroll cancels a horizontal candidate before end; synthetic trailing tap cannot play, save or navigate',()=>{
  const {c,events,scroll}=component();c.start({touches:touch(100)});c.move({touches:touch(55)});scroll();c.end({changedTouches:touch(50)});c.play();c.favorite();c.source();
- assert.equal(events.length,0);assert.equal(c.data.scrolling,true);
- c.start({touches:touch(100)});c.end({changedTouches:touch(100)});c.play();assert.equal(events[0].name,'play');assert.equal(c.data.scrolling,false);
+ assert.equal(events.length,0);
+ c.start({touches:touch(100)});c.end({changedTouches:touch(100)});c.play();assert.equal(events[0].name,'play');
 });
 test('final touch coordinates cancel a candidate, multi-touch/cancel/long press suppress trailing actions',()=>{
  for(const kind of ['final-vertical','multi','cancel','hold']) {

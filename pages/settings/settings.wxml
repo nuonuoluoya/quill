@@ -16,7 +16,7 @@
     <button wx:if="{{hasReturnChapter}}" size="default" class="action primary" bindtap="resumeRequested" disabled="{{busy}}">继续阅读所选章节</button>
   </block>
   <view class="settings-controls">
-    <navigator wx:if="{{favoritesEnabled}}" url="/pages/favorites/favorites" class="settings-link favorites-link" hover-class="row-pressed"><view class="row"><q-icon name="star" color="green" size="26"/><text>我的收藏</text></view><q-icon name="arrow-right" color="muted" size="19"/></navigator>
+    <navigator wx:if="{{favoritesEnabled}}" url="/pages/favorites/favorites" class="settings-link favorites-link" hover-class="row-pressed"><text>我的收藏</text><q-icon name="arrow-right" color="muted" size="19"/></navigator>
     <view class="setting"><view class="section-title">播放偏好</view><view class="muted preference-label">默认倍速</view><view class="choices"><button size="default" wx:for="{{speeds}}" wx:key="*this" class="choice {{speed===item?'active':''}}" data-value="{{item}}" bindtap="setSpeed">{{item}}×</button></view></view>
     <view class="setting"><view class="section-title">阅读进度</view><view wx:if="{{book}}" class="sync-row"><q-icon name="cloud" color="green" size="38"/><view class="grow"><view>{{status}}</view><view class="small muted">{{position}}</view></view><button wx:if="{{loggedIn}}" size="default" class="sync-button" disabled="{{busy}}" bindtap="sync">立即同步</button></view><view wx:else class="muted small no-progress">从内容库选择内容后，在这里管理进度。</view></view>
     <button size="default" class="settings-link data-link" disabled="{{busy || audioBusy}}" bindtap="openAudio" hover-class="row-pressed"><view><view>清除音频缓存</view><view class="link-description">清理本机音频，保留学习进度</view></view><q-icon name="arrow-right" color="muted" size="19"/></button>

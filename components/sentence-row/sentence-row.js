@@ -1,11 +1,10 @@
 const { SentenceSwipe } = require('../../utils/sentence-swipe');
 Component({
   properties: { item: Object, opened: Boolean, disabled: Boolean, pending: Boolean, favorites: Boolean, scrollEpoch: Number },
-  data: { scrolling: false },
-  observers: { scrollEpoch() { if (this.swipe) { this.cancel(); this.setData({ scrolling: true }); } } },
+  observers: { scrollEpoch() { if (this.swipe) this.cancel(); } },
   lifetimes: { attached() { this.swipe = new SentenceSwipe(); } },
   methods: {
-    start(e) { this.setData({ scrolling: false }); this.swipe.start(e.touches, this.properties.opened); this.suppressTap = this.swipe.blockTap; },
+    start(e) { this.swipe.start(e.touches, this.properties.opened); this.suppressTap = this.swipe.blockTap; },
     move(e) { this.swipe.move(e.touches); this.suppressTap = this.swipe.blockTap; },
     end(e) {
       if (e?.changedTouches?.length) this.swipe.move(e.changedTouches);
