@@ -7,8 +7,8 @@
     <view wx:if="{{error}}" class="notice error" role="status">{{error}}</view>
     <view wx:if="{{busy}}" class="status" role="status">正在读取收藏…</view>
   </view>
-  <scroll-view class="favorite-list" scroll-y enhanced bindscrolltolower="more" bindscroll="closeSwipe">
-    <q-sentence-row wx:for="{{rows}}" wx:key="id" id="favorite-{{item.id}}" item="{{item}}" favorites opened="{{openedId===item.id}}" pending="{{pendingId===item.id}}" disabled="{{frozen}}" bindreveal="reveal" bindfavorite="favorite" bindplay="play" bindsource="source"/>
+  <scroll-view class="favorite-list" scroll-y enhanced bindscrolltolower="more" bindscroll="scrollRows" bindtouchstart="beginScroll">
+    <q-sentence-row wx:for="{{rows}}" wx:key="id" id="favorite-{{item.id}}" item="{{item}}" scroll-epoch="{{scrollEpoch}}" favorites opened="{{openedId===item.id}}" pending="{{pendingId===item.id}}" disabled="{{frozen}}" bindreveal="reveal" bindfavorite="favorite" bindplay="play" bindsource="source"/>
     <view wx:if="{{!busy && !error && !rows.length}}" class="empty-state"><q-icon name="{{query?'search':'star'}}" color="{{query?'muted':'green'}}" size="36"/><view class="empty-title serif">{{query?'没有找到相关句子':'还没有收藏'}}</view><text class="muted">{{query?'换个关键词试试':'在阅读页左划句子，点击星标收藏。'}}</text><button wx:if="{{query}}" size="default" class="action outline" bindtap="clearSearch">清空搜索</button><button wx:elif="{{!error}}" size="default" class="action outline" bindtap="library">去选内容</button></view>
     <button wx:if="{{hasMore}}" size="default" class="action quiet" disabled="{{busy}}" bindtap="more">加载更多</button>
     <button wx:if="{{error}}" size="default" class="action outline retry" disabled="{{busy}}" bindtap="reload">重新读取收藏</button>

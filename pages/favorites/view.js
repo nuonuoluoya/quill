@@ -10,7 +10,7 @@ const scopeKey = () => JSON.stringify([identity(), auth.epoch]);
 const restricted = code => ['FAVORITE_UNAVAILABLE','FAVORITE_NOT_FOUND','BOOK_FORBIDDEN','BUILD_REVOKED','BUILD_RETIRED','BUILD_NOT_FOUND','SENTENCE_NOT_FOUND','SESSION_EXPIRED'].includes(code);
 function createFavoritesPage(service) {
   return {
-    data: { rows: [], query: '', total: 0, playableCount: 0, hasMore: false, busy: false, error: '', openedId: '', pendingId: '', frozen: false, currentChapter: null, queueIndex: -1, queueTotal: 0, selecting: false },
+    data: { scrollEpoch: 0, rows: [], query: '', total: 0, playableCount: 0, hasMore: false, busy: false, error: '', openedId: '', pendingId: '', frozen: false, currentChapter: null, queueIndex: -1, queueTotal: 0, selecting: false },
     onLoad() {
       this.alive = true; this.active = false; this.epoch = 0; this.items = [];
       this.practice = new FavoritePractice({ player, state: playerState, resolve: item => service.resolve(item), closeShadow: () => shadowing.reset(),
@@ -48,7 +48,9 @@ function createFavoritesPage(service) {
     more() { if (this.data.hasMore) return this.read(true); },
     search(e) { this.setData({ query: e.detail.value }); this.reload(); },
     clearSearch() { this.search({ detail: { value: '' } }); },
-    reveal(e) { if (!this.data.frozen) this.setData({ openedId: e.detail.open ? e.detail.id : '' }); },
+    reveal(e) { if (!this.data.frozen && !(e.detail.open && this.rowsScrolling)) this.setData({ openedId: e.detail.open ? e.detail.id : '' }); },
+    beginScroll() { this.rowsScrolling = false; },
+    scrollRows() { if (!this.rowsScrolling) { this.rowsScrolling = true; this.setData({ scrollEpoch: this.data.scrollEpoch + 1 }); } this.closeSwipe(); },
     closeSwipe() { if (this.data.openedId) this.setData({ openedId: '' }); },
     play(e) { if (this.data.frozen) return; const item = this.items.find(row => row.id === e.detail.id); if (item?.available) { this.closeSwipe(); return this.practice.choose(item, this.items); } },
     async favorite(e) {

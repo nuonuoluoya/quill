@@ -6,6 +6,7 @@
 .sentence.selected::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#244F3E;border-radius:4px 0 0 4px}
 .sentence.selected::after{display:none}
 .sentence.opened{transform:translateX(-72px)}
+.sentence.scrolling{transition:none}
 .sentence-no{font-family:"Times New Roman",serif;font-size:18px;color:#687078;line-height:28px;width:29px;flex-shrink:0;margin-top:1px}
 .ui-button.play-target{box-sizing:border-box;display:flex;align-items:flex-start;justify-content:center;width:44px;min-width:44px;min-height:44px;padding:3px 8px 0;margin:0;background:transparent;border:0;border-radius:0;line-height:normal}
 .play-target::after,.source::after,.favorite-action::after{border:0}

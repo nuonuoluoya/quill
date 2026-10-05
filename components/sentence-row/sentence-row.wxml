@@ -1,6 +1,6 @@
-<view class="sentence-shell {{favorites?'favorite-row':''}}">
+<view class="sentence-shell {{favorites?'favorite-row':''}}" bindtouchstart="start" bindtouchmove="move" bindtouchend="end" bindtouchcancel="cancel" bindlongpress="hold">
   <button wx:if="{{opened}}" size="default" class="ui-button favorite-action {{pending?'pending':''}}" disabled="{{disabled || pending}}" catchtap="favorite" aria-label="{{item.saved?'取消收藏':'收藏句子'}}" aria-pressed="{{item.saved}}"><q-icon name="{{item.saved?'star-filled':'star'}}" color="green" size="26"/><text class="action-label">{{pending?'保存中':item.favoriteKnown===false?'重试读取':item.saved?'取消收藏':'收藏'}}</text></button>
-  <view class="sentence {{item.selected?'selected':''}} {{opened?'opened':''}}" bindtouchstart="start" bindtouchmove="move" bindtouchend="end" bindtouchcancel="cancel" bindlongpress="hold" bindtap="play">
+  <view class="sentence {{item.selected?'selected':''}} {{opened?'opened':''}} {{scrolling?'scrolling':''}}" bindtap="play">
     <text wx:if="{{!favorites}}" class="sentence-no">{{item.number}}</text>
     <button wx:if="{{favorites && item.source}}" size="default" class="ui-button source" catchtap="source" disabled="{{disabled || !item.locatable}}" aria-label="返回原文，{{item.source}}">{{item.source}}</button>
     <button size="default" class="ui-button play-target" catchtap="play" disabled="{{disabled || !item.available}}" aria-label="{{item.playing?'暂停播放':item.available?'播放句子':'暂无音频'}}"><view class="sentence-play {{item.available?'':'no-audio'}}"><q-icon wx:if="{{item.available}}" name="{{item.selected && item.playing?'pause':'play'}}" color="{{item.selected?'white':'ink'}}" size="15"/><text wx:else class="muted">—</text></view></button>

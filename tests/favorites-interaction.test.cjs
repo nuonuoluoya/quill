@@ -17,11 +17,11 @@ test('left swipe reveals, right swipe closes; vertical, long hold and multi-touc
 test('sentence component reveals without saving, star requests a controlled change, long press does not play', () => {
   let definition; global.Component = value => definition = value;
   require('../components/sentence-row/sentence-row'); delete global.Component;
-  const events = [], c = { ...definition.methods, properties: { item: { id: 's', available: true, saved: false } }, triggerEvent: (name, detail) => events.push({ name, detail }) };
+  const events = [], c = { ...definition.methods, setData() {}, properties: { item: { id: 's', available: true, saved: false } }, triggerEvent: (name, detail) => events.push({ name, detail }) };
   definition.lifetimes.attached.call(c);
   c.start({ touches: touch(100) }); c.move({ touches: touch(20) }); c.end(); c.play();
   assert.deepEqual(events.map(e => e.name), ['reveal']); assert.equal(c.properties.item.saved, false);
-  c.favorite(); assert.deepEqual(events.at(-1), { name: 'favorite', detail: { id: 's', saved: true } }); assert.equal(c.properties.item.saved, false);
+  c.start({ touches: touch(100) }); c.end(); c.favorite(); assert.deepEqual(events.at(-1), { name: 'favorite', detail: { id: 's', saved: true } }); assert.equal(c.properties.item.saved, false);
   c.properties.pending = true; c.favorite(); assert.equal(events.length, 2);
   c.start({ touches: touch(100) }); c.hold(); c.play(); assert.equal(events.length, 2);
   c.properties.disabled = true; c.start({ touches: touch(100) }); c.play(); c.favorite(); assert.equal(events.length, 2);

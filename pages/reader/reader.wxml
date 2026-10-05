@@ -9,10 +9,10 @@
     <button size="default" wx:if="{{favoriteError}}" class="quiet small" bindtap="refreshFavorites">{{favoriteError}}</button>
     <button size="default" wx:if="{{hiddenCurrent}}" class="quiet small" bindtap="locate">当前句子不在搜索结果中 · 定位原文</button>
   </view>
-  <scroll-view class="sentences" scroll-y enhanced scroll-into-view="{{target}}" bindtouchstart="manualScroll" bindscrolltolower="more" bindscroll="closeFavorite">
+  <scroll-view class="sentences" scroll-y enhanced scroll-into-view="{{target}}" bindtouchstart="manualScroll" bindscrolltolower="more" bindscroll="scrollRows">
     <view wx:if="{{error}}" class="empty error">{{error}}<button size="default" class="action outline" bindtap="retry">重试</button></view><view wx:elif="{{busy}}" class="empty">正在加载原文…</view>
     <block wx:else>
-      <q-sentence-row wx:for="{{rows}}" wx:key="id" id="sentence-{{item.index-1}}" item="{{item}}" opened="{{openedId===item.id}}" pending="{{pendingFavorite===item.id}}" disabled="{{frozen || favoriteFrozen}}" bindreveal="revealFavorite" bindfavorite="changeFavorite" bindplay="playRow"/>
+      <q-sentence-row wx:for="{{rows}}" wx:key="id" id="sentence-{{item.index-1}}" item="{{item}}" scroll-epoch="{{scrollEpoch}}" opened="{{openedId===item.id}}" pending="{{pendingFavorite===item.id}}" disabled="{{frozen || favoriteFrozen}}" bindreveal="revealFavorite" bindfavorite="changeFavorite" bindplay="playRow"/>
       <view wx:if="{{!rows.length}}" class="empty">{{query?'没有找到匹配的句子':isPodcast?'当前部分暂无正文':'本章暂无正文'}}</view><button size="default" wx:if="{{more}}" class="action quiet" bindtap="more">加载更多句子</button>
     </block>
   </scroll-view>

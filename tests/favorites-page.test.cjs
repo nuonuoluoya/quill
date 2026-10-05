@@ -74,3 +74,9 @@ test('favorites invalid or disabled navigation keeps the open row and current se
  r.p.play({detail:{id:'missing'}});assert.equal(r.p.data.openedId,'a');
  r.shadowState.open=true;r.p.refresh();r.p.action({detail:{action:'next'}});r.p.play({detail:{id:'b'}});assert.equal(r.p.data.openedId,'a');assert.equal(r.p.practice.current.id,'a');
 });
+test('favorites scroll invalidates a late reveal once per touch sequence, a new clear swipe remains usable',async t=>{
+ const r=runtime();t.after(()=>r.p.onUnload());await tick();r.p.beginScroll();r.p.reveal({detail:{id:'a',open:true}});
+ r.p.scrollRows();const epoch=r.p.data.scrollEpoch;assert.equal(r.p.data.openedId,'');r.p.reveal({detail:{id:'a',open:true}});assert.equal(r.p.data.openedId,'');
+ for(let i=0;i<30;i++)r.p.scrollRows();assert.equal(r.p.data.scrollEpoch,epoch);
+ r.p.beginScroll();r.p.reveal({detail:{id:'b',open:true}});assert.equal(r.p.data.openedId,'b');
+});

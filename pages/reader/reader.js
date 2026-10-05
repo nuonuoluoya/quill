@@ -16,7 +16,7 @@ const { cleanupState } = require('../../models/audio-cleanup');
 const { favorites } = require('../../models/favorites');
 const { favoriteId, reference } = require('../../utils/favorites');
 Page({
-    data: { openedId: '', pendingFavorite: '', favoriteError: '', favoriteFrozen: false, chapterLabel: '章节', chapterOptions: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, catalogLabel: '章节', unitLabel: '章', isTv: false, isPodcast: false, chapterMode: false, offline: false, book: null, chapter: null, title: '听力阅读', rows: [], query: '', target: '', sheet: false, error: '', notice: '', updated: false, busy: true, frozen: false, hiddenCurrent: false, status: '', more: false },
+    data: { scrollEpoch: 0, openedId: '', pendingFavorite: '', favoriteError: '', favoriteFrozen: false, chapterLabel: '章节', chapterOptions: [], seasons: [], selectedSeasonId: '', seasonIndex: 0, catalogLabel: '章节', unitLabel: '章', isTv: false, isPodcast: false, chapterMode: false, offline: false, book: null, chapter: null, title: '听力阅读', rows: [], query: '', target: '', sheet: false, error: '', notice: '', updated: false, busy: true, frozen: false, hiddenCurrent: false, status: '', more: false },
     onLoad(q) { this.bookId = q.bookId || ''; this.buildId = q.buildId || ''; this.chapterId = q.chapterId || ''; this.sentenceId = q.sentenceId || ''; this.alive = true; this.networkChange = e => { if (this.alive) this.setData({ offline: !e.isConnected }); }; if (wx.onNetworkStatusChange) wx.onNetworkStatusChange(this.networkChange); if (wx.getNetworkType) wx.getNetworkType({ success: e => this.networkChange({ isConnected: e.networkType !== 'none' }) }); this.active = true; this.epoch = 0; this.limit = 40; this.userScrolled = false; this.off = subscribe(() => this.refresh()); this.identityOff = onIdentityChange(() => { this.epoch++; if (this.ownsPlayer()) { shadowing.reset(); player.dispose(); } this.setData({ book: null, chapter: null, rows: [], openedId: '', pendingFavorite: '', favoriteError: '' }); if (this.active) this.load(); else this.needsIdentityLoad = true; }); this.load(); },
     onShow() { this.active = true; if (this.needsIdentityLoad) { this.needsIdentityLoad = false; this.load(); } else if (this.data.book && this.data.chapter) { if (!this.ownsPlayer()) { player.load(this.data.book, this.data.chapter, this.resumeIndex || 0); player.onEnded = null; this.bindSelection(); } this.refreshFavorites(); this.renderKey = ''; this.refresh(); } shadowing.resume(); player.setForeground(true); this.checkAccess(); clearInterval(this.timer); this.timer = setInterval(() => this.checkAccess(), 60000); },
     onHide() { if (this.ownsPlayer()) this.resumeIndex = playerState.index; this.favoriteRequest = (this.favoriteRequest || 0) + 1; this.favoriteWrite = (this.favoriteWrite || 0) + 1; this.setData({ openedId: '', pendingFavorite: '' }); this.active = false; this.updateRequest = (this.updateRequest || 0) + 1; if (this.updateLoadEpoch === this.epoch && this.data.busy) { this.epoch++; this.updateLoadEpoch = null; this.setData({ busy: false, error: '内容更新已取消，请重试' }); } else if (this.data.busy) { this.epoch++; this.needsIdentityLoad = true; this.setData({ busy: false }); } if (this.ownsPlayer()) { shadowing.interrupt(); player.setForeground(false); } progressStore.flushAll(); clearInterval(this.timer); },
@@ -32,7 +32,7 @@ Page({
         try { await favorites.status(b,c); if (current()) { this.favoriteRender = (this.favoriteRender || 0) + 1; this.refresh(); } }
         catch (e) { if (current()) { if (e.code === 'FAVORITES_CHANGED' && retried !== true) return this.refreshFavorites(true); this.setData({ favoriteError: '收藏状态读取失败 · 点击重试' }); this.favoriteRender = (this.favoriteRender || 0) + 1; this.refresh(); } }
     },
-    revealFavorite(e) { if (!this.data.frozen && !shadowState.open) this.setData({ openedId: e.detail.open ? e.detail.id : '' }); },
+    revealFavorite(e) { if (!this.data.frozen && !shadowState.open && !(e.detail.open && this.rowsScrolling)) this.setData({ openedId: e.detail.open ? e.detail.id : '' }); },
     closeFavorite() { if (this.data.openedId) this.setData({ openedId: '' }); },
     playRow(e) { this.click({ currentTarget:{ dataset:{ index:e.detail.index } } }); },
     async changeFavorite(e) {
@@ -141,7 +141,8 @@ Page({
     } },
     search(e) { this.closeFavorite(); this.limit = 40; this.setData({ query: e.detail.value }); this.refresh(); },
     more() { this.limit += 40; this.refresh(); },
-    manualScroll() { this.userScrolled = true; },
+    manualScroll() { this.userScrolled = true; this.rowsScrolling = false; },
+    scrollRows() { if (!this.rowsScrolling) { this.rowsScrolling = true; this.setData({ scrollEpoch: this.data.scrollEpoch + 1 }); } this.closeFavorite(); },
     locate() { this.userScrolled = false; this.limit = Math.max(this.limit, playerState.index + 15); this.setData({ query: '', target: '' }); this.refresh(); wx.nextTick(() => { if (this.alive)
         this.setData({ target: 'sentence-' + playerState.index }); }); },
     click(e) { if (this.data.frozen || shadowState.open) return;

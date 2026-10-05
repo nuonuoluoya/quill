@@ -14,6 +14,13 @@ const { selectedBook } = require('../models/context');
 const book = { bookId: 'b', buildId: 'build', textRevision: 'r', title: 'Book', chapters: [{ id: 'c', title: 'Chapter', sentenceCount: 3, playableCount: 2 }] };
 const chapter = { ...book, chapterId: 'c', chapterAudio: { status: 'unavailable', audioId: null, duration: null, reasons: ['Missing'] }, sentences: [1, 2, 3].map(index => ({ id: 's' + index, index, text: index === 3 ? 'Finding lanterns' : 'A quiet morning', audioId: index === 2 ? null : 'a' + index, duration: index === 2 ? null : 3, alignment: { status: index === 2 ? 'needs_review' : 'verified', reasons: index === 2 ? ['Review'] : [] } })) };
 const tick = () => new Promise(r => setImmediate(r));
+test('reader scroll closes without reopening from stale touchend, coalesces scroll events and permits the next gesture',async t=>{
+ content.book=async()=>book;content.chapter=async()=>chapter;content.snapshot=async()=>book;
+ const p=page('reader');t.after(()=>p.onUnload());p.onLoad({bookId:'b'});await tick();
+ p.manualScroll();p.revealFavorite({detail:{id:'s1',open:true}});p.scrollRows();const epoch=p.data.scrollEpoch;
+ p.revealFavorite({detail:{id:'s1',open:true}});assert.equal(p.data.openedId,'');for(let i=0;i<30;i++)p.scrollRows();assert.equal(p.data.scrollEpoch,epoch);
+ p.manualScroll();p.revealFavorite({detail:{id:'s2',open:true}});assert.equal(p.data.openedId,'s2');
+});
 test('reader row and actual dock actions close swipes before playback; failures, bounds and disabled controls preserve intent',async t=>{
     const { favorites }=require('../models/favorites'),{favoriteId,reference}=require('../utils/favorites');
     const original={status:favorites.status,set:favorites.set,authorize:player.authorize,update:progressStore.update};let favoritesWrites=0,progressWrites=0,rejectAudio;
